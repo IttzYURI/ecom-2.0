@@ -1,0 +1,16 @@
+{
+  "name": "restaurant-commerce-cloud",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace @rcc/web",
+    "build": "npm run build --workspace @rcc/web",
+    "start": "npm run start --workspace @rcc/web",
+    "lint": "npm run lint --workspace @rcc/web",
+    "typecheck": "npm run typecheck --workspace @rcc/web"
+  }
+}

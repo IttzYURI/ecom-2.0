@@ -1,0 +1,379 @@
+import type {
+  Booking,
+  Category,
+  MenuItem,
+  OptionGroup,
+  Order,
+  PlatformMetric,
+  Promotion,
+  Review,
+  Role,
+  StaffMember,
+  StorefrontContent,
+  Tenant,
+  TenantBundle
+} from "@rcc/contracts";
+
+const tenants: Tenant[] = [
+  {
+    id: "tenant_bella",
+    name: "Bella Roma",
+    slug: "bella-roma",
+    subdomain: "bella",
+    status: "active",
+    cuisine: "Italian",
+    description: "Wood-fired pizza, fresh pasta, and quick delivery.",
+    phone: "+44 20 1234 5678",
+    email: "hello@bellaroma.test",
+    address: "10 Market Street, London",
+    deliveryPostcodes: ["E1 1AA", "E1 1AB", "E1 1AC"],
+    branding: {
+      primaryColor: "#9d2f2f",
+      accentColor: "#f5d9a6",
+      logoText: "Bella Roma",
+      heroImage:
+        "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=80"
+    }
+  },
+  {
+    id: "tenant_spice",
+    name: "Spice Garden",
+    slug: "spice-garden",
+    subdomain: "spice",
+    status: "active",
+    cuisine: "Indian",
+    description: "Bold curries, grills, and family meal deals.",
+    phone: "+44 20 9876 5432",
+    email: "team@spicegarden.test",
+    address: "22 High Road, London",
+    deliveryPostcodes: ["SW1A 1AA", "SW1A 1AB"],
+    branding: {
+      primaryColor: "#0f5c4d",
+      accentColor: "#f7d06e",
+      logoText: "Spice Garden",
+      heroImage:
+        "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1200&q=80"
+    }
+  }
+];
+
+const storefrontContent: Record<string, StorefrontContent> = {
+  tenant_bella: {
+    heroTitle: "Restaurant-quality food, ordered direct.",
+    heroSubtitle: "Delivery and collection with no marketplace detour.",
+    about:
+      "Bella Roma serves fast-moving, premium Italian comfort food with a focus on direct ordering and repeat customers.",
+    faq: [
+      {
+        question: "How long does delivery take?",
+        answer: "Typical delivery time is 30 to 45 minutes depending on postcode."
+      },
+      {
+        question: "Do you support collection?",
+        answer: "Yes, collection is available every day during opening hours."
+      }
+    ]
+  },
+  tenant_spice: {
+    heroTitle: "Freshly prepared Indian classics, built for repeat orders.",
+    heroSubtitle: "Collections, delivery, meal deals, and bold flavors.",
+    about:
+      "Spice Garden combines neighborhood reliability with a premium online ordering experience.",
+    faq: [
+      {
+        question: "Can I request spice levels?",
+        answer: "Yes, many dishes support modifier options and special notes."
+      },
+      {
+        question: "Do you accept cash?",
+        answer: "Yes, both cash and online card payments are supported."
+      }
+    ]
+  }
+};
+
+const categories: Category[] = [
+  {
+    id: "cat_pizza",
+    tenantId: "tenant_bella",
+    name: "Pizza",
+    slug: "pizza",
+    description: "Stone-baked classics and house specials.",
+    sortOrder: 1,
+    visible: true
+  },
+  {
+    id: "cat_pasta",
+    tenantId: "tenant_bella",
+    name: "Pasta",
+    slug: "pasta",
+    description: "Fresh pasta and baked favorites.",
+    sortOrder: 2,
+    visible: true
+  },
+  {
+    id: "cat_curries",
+    tenantId: "tenant_spice",
+    name: "Curries",
+    slug: "curries",
+    description: "House curries and chef specials.",
+    sortOrder: 1,
+    visible: true
+  }
+];
+
+const optionGroups: OptionGroup[] = [
+  {
+    id: "grp_size",
+    tenantId: "tenant_bella",
+    name: "Choose size",
+    required: true,
+    selectionType: "single",
+    minSelect: 1,
+    maxSelect: 1,
+    options: [
+      { id: "opt_regular", name: "Regular", priceDelta: 0 },
+      { id: "opt_large", name: "Large", priceDelta: 3 }
+    ]
+  },
+  {
+    id: "grp_toppings",
+    tenantId: "tenant_bella",
+    name: "Extra toppings",
+    required: false,
+    selectionType: "multiple",
+    minSelect: 0,
+    maxSelect: 3,
+    options: [
+      { id: "opt_olives", name: "Olives", priceDelta: 1.5 },
+      { id: "opt_pepperoni", name: "Pepperoni", priceDelta: 2 },
+      { id: "opt_mushrooms", name: "Mushrooms", priceDelta: 1.5 }
+    ]
+  },
+  {
+    id: "grp_heat",
+    tenantId: "tenant_spice",
+    name: "Spice level",
+    required: true,
+    selectionType: "single",
+    minSelect: 1,
+    maxSelect: 1,
+    options: [
+      { id: "opt_mild", name: "Mild", priceDelta: 0 },
+      { id: "opt_medium", name: "Medium", priceDelta: 0 },
+      { id: "opt_hot", name: "Hot", priceDelta: 0 }
+    ]
+  }
+];
+
+const menuItems: MenuItem[] = [
+  {
+    id: "item_margherita",
+    tenantId: "tenant_bella",
+    categoryIds: ["cat_pizza"],
+    name: "Margherita",
+    slug: "margherita",
+    description: "San Marzano tomato, basil, and Fior di Latte mozzarella.",
+    image:
+      "https://images.unsplash.com/photo-1604382355076-af4b0eb60143?auto=format&fit=crop&w=900&q=80",
+    basePrice: 11.5,
+    featured: true,
+    bestSeller: true,
+    available: true,
+    optionGroupIds: ["grp_size", "grp_toppings"]
+  },
+  {
+    id: "item_lasagne",
+    tenantId: "tenant_bella",
+    categoryIds: ["cat_pasta"],
+    name: "Lasagne al Forno",
+    slug: "lasagne-al-forno",
+    description: "Slow-cooked beef ragu, bechamel, parmesan.",
+    image:
+      "https://images.unsplash.com/photo-1619895092538-128341789043?auto=format&fit=crop&w=900&q=80",
+    basePrice: 13.9,
+    featured: true,
+    bestSeller: false,
+    available: true,
+    optionGroupIds: []
+  },
+  {
+    id: "item_butter_chicken",
+    tenantId: "tenant_spice",
+    categoryIds: ["cat_curries"],
+    name: "Butter Chicken",
+    slug: "butter-chicken",
+    description: "Creamy tomato curry, tandoori chicken, fenugreek.",
+    image:
+      "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?auto=format&fit=crop&w=900&q=80",
+    basePrice: 12.5,
+    featured: true,
+    bestSeller: true,
+    available: true,
+    optionGroupIds: ["grp_heat"]
+  }
+];
+
+const promotions: Promotion[] = [
+  {
+    id: "promo_bella",
+    tenantId: "tenant_bella",
+    name: "Midweek 15% Off",
+    type: "percentage",
+    summary: "15% off orders above GBP 25 every Tuesday to Thursday.",
+    active: true
+  },
+  {
+    id: "promo_spice",
+    tenantId: "tenant_spice",
+    name: "Free Popadoms",
+    type: "conditional",
+    summary: "Free popadoms on delivery orders above GBP 20.",
+    active: true
+  }
+];
+
+const reviews: Review[] = [
+  {
+    id: "review_1",
+    tenantId: "tenant_bella",
+    author: "James",
+    rating: 5,
+    content: "Fast delivery, excellent pizza, and much better than ordering through a marketplace."
+  },
+  {
+    id: "review_2",
+    tenantId: "tenant_spice",
+    author: "Aisha",
+    rating: 5,
+    content: "The online ordering flow is quick and the curry quality is consistently strong."
+  }
+];
+
+const bookings: Booking[] = [
+  {
+    id: "booking_1",
+    tenantId: "tenant_bella",
+    customerName: "Mia Turner",
+    email: "mia@example.com",
+    phone: "+44 7700 900111",
+    partySize: 4,
+    bookingDate: "2026-04-13",
+    bookingTime: "19:30",
+    notes: "Window seat if possible",
+    status: "pending"
+  }
+];
+
+const orders: Order[] = [
+  {
+    id: "order_1",
+    tenantId: "tenant_bella",
+    orderNumber: "BR-1042",
+    customerName: "Noah Carter",
+    customerEmail: "noah@example.com",
+    customerPhone: "+44 7700 900222",
+    fulfillmentType: "delivery",
+    address: "12 Baker Street, London",
+    items: [
+      {
+        menuItemId: "item_margherita",
+        name: "Margherita",
+        quantity: 2,
+        unitPrice: 14.5,
+        selectedOptions: [
+          {
+            optionGroupId: "grp_size",
+            optionIds: ["opt_large"]
+          }
+        ]
+      }
+    ],
+    subtotal: 29,
+    deliveryFee: 3.5,
+    discount: 0,
+    total: 32.5,
+    orderStatus: "accepted",
+    paymentStatus: "paid",
+    createdAt: "2026-04-11T10:30:00.000Z"
+  }
+];
+
+const roles: Role[] = [
+  {
+    id: "role_owner",
+    tenantId: "tenant_bella",
+    name: "Owner",
+    permissions: [
+      "menu.items.write",
+      "orders.update_status",
+      "settings.delivery.write",
+      "staff.manage",
+      "financials.manage"
+    ]
+  },
+  {
+    id: "role_manager",
+    tenantId: "tenant_bella",
+    name: "Manager",
+    permissions: ["menu.items.write", "orders.update_status", "bookings.review"]
+  }
+];
+
+const staff: StaffMember[] = [
+  {
+    id: "staff_1",
+    tenantId: "tenant_bella",
+    name: "Luca Romano",
+    email: "luca@bellaroma.test",
+    roleIds: ["role_owner"]
+  },
+  {
+    id: "staff_2",
+    tenantId: "tenant_bella",
+    name: "Sara Dean",
+    email: "sara@bellaroma.test",
+    roleIds: ["role_manager"]
+  }
+];
+
+export const platformMetrics: PlatformMetric[] = [
+  { label: "Active tenants", value: "2" },
+  { label: "Orders today", value: "148" },
+  { label: "GMV today", value: "GBP 4,920" },
+  { label: "Pending support issues", value: "3" }
+];
+
+export function getTenantBySlug(slug: string): Tenant | undefined {
+  return tenants.find((tenant) => tenant.slug === slug || tenant.subdomain === slug);
+}
+
+export function getDefaultTenant(): Tenant {
+  return tenants[0];
+}
+
+export function getTenantBundle(tenantId: string): TenantBundle {
+  const tenant = tenants.find((entry) => entry.id === tenantId);
+
+  if (!tenant) {
+    throw new Error(`Unknown tenant: ${tenantId}`);
+  }
+
+  return {
+    tenant,
+    content: storefrontContent[tenantId],
+    categories: categories.filter((entry) => entry.tenantId === tenantId),
+    optionGroups: optionGroups.filter((entry) => entry.tenantId === tenantId),
+    menuItems: menuItems.filter((entry) => entry.tenantId === tenantId),
+    promotions: promotions.filter((entry) => entry.tenantId === tenantId),
+    reviews: reviews.filter((entry) => entry.tenantId === tenantId),
+    bookings: bookings.filter((entry) => entry.tenantId === tenantId),
+    orders: orders.filter((entry) => entry.tenantId === tenantId),
+    roles: roles.filter((entry) => entry.tenantId === tenantId),
+    staff: staff.filter((entry) => entry.tenantId === tenantId)
+  };
+}
+
+export function listTenants(): Tenant[] {
+  return tenants;
+}

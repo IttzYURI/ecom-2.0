@@ -1,0 +1,14 @@
+node_modules
+.next
+dist
+.turbo
+.env
+.env.local
+coverage
+*.log
+homepage-*.png
+menu-*.png
+start-*.err.log
+start-*.out.log
+dev-server*.log
+dev-*.log

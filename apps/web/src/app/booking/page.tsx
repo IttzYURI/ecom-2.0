@@ -1,0 +1,14 @@
+import { LayoutShell } from "../../components/layout-shell";
+import { BookingPage } from "../../components/storefront";
+
+export default function BookingRoute() {
+  return (
+    <LayoutShell
+      eyebrow="Reservations"
+      title="Reservations"
+      subtitle="Book directly with the restaurant for lunch, dinner, and special occasions."
+    >
+      <BookingPage />
+    </LayoutShell>
+  );
+}
