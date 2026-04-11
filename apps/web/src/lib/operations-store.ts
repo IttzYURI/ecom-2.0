@@ -50,6 +50,10 @@ async function writeOperationsStore(store: OperationsStore) {
   await fs.writeFile(operationsFilePath, JSON.stringify(store, null, 2), "utf8");
 }
 
+function createId(prefix: string) {
+  return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export async function getStoredOperationsContent(tenantId: string) {
   const mongoOperations = await getTenantDocument<{
     orders: Order[];
@@ -94,6 +98,64 @@ export async function updateOrderStatus(
   await writeOperationsStore(store);
 }
 
+export async function createStoredOrder(
+  tenantId: string,
+  input: Omit<Order, "id" | "tenantId" | "createdAt">
+) {
+  const current = await getStoredOperationsContent(tenantId);
+  const order: Order = {
+    id: createId("order"),
+    tenantId,
+    createdAt: new Date().toISOString(),
+    ...input
+  };
+  const nextValue = {
+    ...current,
+    orders: [order, ...current.orders]
+  };
+
+  const savedToMongo = await saveTenantDocument("operations_content", tenantId, nextValue);
+
+  if (!savedToMongo) {
+    const store = await readOperationsStore();
+    store[tenantId] = nextValue;
+    await writeOperationsStore(store);
+  }
+
+  return order;
+}
+
+export async function updateStoredOrderPayment(
+  tenantId: string,
+  orderId: string,
+  input: {
+    orderStatus?: Order["orderStatus"];
+    paymentStatus?: Order["paymentStatus"];
+  }
+) {
+  const current = await getStoredOperationsContent(tenantId);
+  const nextValue = {
+    ...current,
+    orders: current.orders.map((order) =>
+      order.id === orderId
+        ? {
+            ...order,
+            orderStatus: input.orderStatus ?? order.orderStatus,
+            paymentStatus: input.paymentStatus ?? order.paymentStatus
+          }
+        : order
+    )
+  };
+
+  const savedToMongo = await saveTenantDocument("operations_content", tenantId, nextValue);
+
+  if (!savedToMongo) {
+    const store = await readOperationsStore();
+    store[tenantId] = nextValue;
+    await writeOperationsStore(store);
+  }
+}
+
 export async function updateBookingStatus(
   tenantId: string,
   bookingId: string,
@@ -116,6 +178,32 @@ export async function updateBookingStatus(
   const store = await readOperationsStore();
   store[tenantId] = nextValue;
   await writeOperationsStore(store);
+}
+
+export async function createStoredBooking(
+  tenantId: string,
+  input: Omit<Booking, "id" | "tenantId">
+) {
+  const current = await getStoredOperationsContent(tenantId);
+  const booking: Booking = {
+    id: createId("booking"),
+    tenantId,
+    ...input
+  };
+  const nextValue = {
+    ...current,
+    bookings: [booking, ...current.bookings]
+  };
+
+  const savedToMongo = await saveTenantDocument("operations_content", tenantId, nextValue);
+
+  if (!savedToMongo) {
+    const store = await readOperationsStore();
+    store[tenantId] = nextValue;
+    await writeOperationsStore(store);
+  }
+
+  return booking;
 }
 
 export async function getRuntimeTenantBundleWithOperations(

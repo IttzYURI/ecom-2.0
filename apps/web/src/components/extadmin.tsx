@@ -28,6 +28,7 @@ export function ExtAdminShell({
           <a href="/extadmin/menu">Menu</a>
           <a href="/extadmin/orders">Orders</a>
           <a href="/extadmin/bookings">Bookings</a>
+          <a href="/extadmin/media">Media</a>
           <a href="/extadmin/staff">Staff</a>
           <a href="/extadmin/settings">Settings</a>
           <form action="/api/v1/extadmin/logout" method="post">
@@ -725,6 +726,79 @@ export function ExtAdminStaffPage({
             </li>
           ))}
         </ul>
+      </article>
+    </section>
+  );
+}
+
+export function ExtAdminMediaPage({
+  assets
+}: {
+  assets: Array<{
+    id: string;
+    label: string;
+    url: string;
+    kind: string;
+    createdAt: string;
+  }>;
+}) {
+  return (
+    <section className="stack">
+      <article className="panel">
+        <h2>Media library</h2>
+        <div className="content-grid">
+          <section className="panel">
+            <h3>Add media asset</h3>
+            <form className="form-grid" method="post" action="/api/v1/extadmin/media/create">
+              <input type="hidden" name="tenantId" value="tenant_bella" />
+              <input name="label" placeholder="Asset label" />
+              <input name="url" placeholder="https://..." />
+              <select name="kind" defaultValue="gallery">
+                <option value="gallery">Gallery</option>
+                <option value="hero">Hero</option>
+                <option value="general">General</option>
+              </select>
+              <button type="submit" className="button-primary">
+                Save asset
+              </button>
+            </form>
+          </section>
+          <section className="panel">
+            <h3>Usage</h3>
+            <ul className="plain-list">
+              <li><strong>Gallery assets</strong><span>Keep reusable image URLs in one owner-managed library</span></li>
+              <li><strong>Hero assets</strong><span>Store preferred visuals before assigning them in content settings</span></li>
+              <li><strong>General assets</strong><span>Maintain a shared pool of approved image URLs for the site</span></li>
+            </ul>
+          </section>
+        </div>
+      </article>
+      <article className="panel">
+        <h2>Saved assets</h2>
+        <div className="stack">
+          {assets.length ? (
+            assets.map((asset) => (
+              <section key={asset.id} className="panel">
+                <div className="section-heading">
+                  <div>
+                    <p className="eyebrow">{asset.kind}</p>
+                    <h3>{asset.label}</h3>
+                    <p>{asset.url}</p>
+                  </div>
+                  <form method="post" action="/api/v1/extadmin/media/delete">
+                    <input type="hidden" name="tenantId" value="tenant_bella" />
+                    <input type="hidden" name="assetId" value={asset.id} />
+                    <button type="submit" className="button-ghost compact-button">
+                      Delete asset
+                    </button>
+                  </form>
+                </div>
+              </section>
+            ))
+          ) : (
+            <p>No media assets saved yet.</p>
+          )}
+        </div>
       </article>
     </section>
   );

@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { getDefaultTenant, getTenantBundle } from "../../../../../lib/mock-data";
+import { getRuntimeTenantBundle } from "../../../../../lib/content-store";
+import { getDefaultTenant } from "../../../../../lib/mock-data";
 
 export async function GET() {
-  const bundle = getTenantBundle(getDefaultTenant().id);
+  const bundle = await getRuntimeTenantBundle(getDefaultTenant().id);
 
   return NextResponse.json({
     success: true,

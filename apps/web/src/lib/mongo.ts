@@ -44,6 +44,9 @@ export async function getMongoDb() {
       db.collection("tenant_settings").createIndex({ tenantId: 1 }, { unique: true }),
       db.collection("operations_content").createIndex({ tenantId: 1 }, { unique: true }),
       db.collection("reviews_content").createIndex({ tenantId: 1 }, { unique: true }),
+      db.collection("payments_content").createIndex({ tenantId: 1 }, { unique: true }),
+      db.collection("notifications_content").createIndex({ tenantId: 1 }, { unique: true }),
+      db.collection("media_content").createIndex({ tenantId: 1 }, { unique: true }),
       db.collection("extadmin_users").createIndex(
         { tenantId: 1, email: 1 },
         { unique: true }
