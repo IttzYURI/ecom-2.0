@@ -27,6 +27,7 @@ html {
     radial-gradient(circle at top left, #fff4e4 0%, transparent 30%),
     linear-gradient(180deg, var(--bg) 0%, var(--bg-deep) 100%);
   color: var(--text);
+  scroll-behavior: smooth;
 }
 
 body {
@@ -66,25 +67,39 @@ textarea {
 .site-footer,
 .page-shell {
   max-width: none;
-  width: 100vw;
+  width: 100%;
   margin: 0;
   padding-left: 0;
   padding-right: 0;
 }
 
 .site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(255, 248, 239, 0.78);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(40, 28, 18, 0.08);
+}
+
+.chrome-inner {
+  width: min(1280px, calc(100% - 3rem));
+  margin: 0 auto;
+}
+
+.site-header .chrome-inner {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 1.25rem;
-  padding-top: 1.3rem;
-  padding-bottom: 1.3rem;
+  padding-top: 1.2rem;
+  padding-bottom: 1.2rem;
 }
 
 .brand-lockup {
-  font-size: 1.7rem;
+  font-size: 1.95rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.02em;
 }
 
 .nav-links,
@@ -100,6 +115,10 @@ textarea {
   font-family: "Segoe UI", sans-serif;
   color: var(--muted);
   justify-content: center;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+  font-weight: 700;
 }
 
 .nav-links a {
@@ -111,13 +130,15 @@ textarea {
 }
 
 .page-shell {
-  padding-top: 0.5rem;
-  padding-bottom: 2rem;
+  width: min(1280px, calc(100% - 3rem));
+  margin: 0 auto;
+  padding-top: 2rem;
+  padding-bottom: 4rem;
   min-width: 0;
 }
 
 .home-shell {
-  padding-top: 0;
+  padding-top: 2.5rem;
 }
 
 .page-hero {
@@ -358,6 +379,9 @@ button {
   color: var(--brand-dark);
   font-family: "Segoe UI", sans-serif;
   font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.74rem;
 }
 
 .content-grid,
@@ -372,6 +396,10 @@ button {
 
 .stack-xl {
   gap: 2rem;
+}
+
+.home-stack {
+  gap: 7rem;
 }
 
 .content-grid {
@@ -393,10 +421,18 @@ button {
 }
 
 .stat-band article {
-  background: rgba(255, 248, 239, 0.82);
+  background: rgba(255, 255, 255, 0.76);
   border: 1px solid var(--line);
-  border-radius: 24px;
-  padding: 1.25rem 1.4rem;
+  border-radius: 2rem;
+  padding: 2rem 1.75rem;
+  box-shadow: var(--shadow);
+}
+
+.stat-band-premium {
+  padding: 1rem;
+  border-radius: 2.5rem;
+  background: rgba(255, 253, 249, 0.72);
+  border: 1px solid rgba(40, 28, 18, 0.08);
   box-shadow: var(--shadow);
 }
 
@@ -432,7 +468,7 @@ button {
 .trio-showcase {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1.5rem;
+  gap: 2.5rem;
 }
 
 .showcase-dish {
@@ -441,8 +477,10 @@ button {
 }
 
 .showcase-dish img {
-  height: 280px;
+  height: 320px;
+  border: 10px solid rgba(255, 255, 255, 0.92);
   border-radius: 999px;
+  box-shadow: 0 28px 50px rgba(67, 44, 24, 0.14);
 }
 
 .showcase-dish-copy {
@@ -466,16 +504,23 @@ button {
 .menu-card {
   display: grid;
   gap: 1rem;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(40, 28, 18, 0.08);
+  border-radius: 2rem;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(67, 44, 24, 0.08);
 }
 
 .menu-card img {
-  height: 120px;
+  height: 240px;
+  border-radius: 0;
 }
 
 .menu-card-body {
   display: grid;
   gap: 0.55rem;
   min-width: 0;
+  padding: 0 1.5rem 1.5rem;
 }
 
 .menu-card-topline {
@@ -547,7 +592,11 @@ button {
 }
 
 .gallery-strip {
-  padding: 1.5rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 0;
+  border-radius: 2.5rem;
+  overflow: hidden;
+  min-height: 380px;
 }
 
 .gallery-strip img,
@@ -556,8 +605,9 @@ button {
 }
 
 .gallery-strip img {
-  width: 100%;
-  height: auto;
+  height: 100%;
+  min-height: 380px;
+  border-radius: 0;
 }
 
 .form-grid {
@@ -684,6 +734,36 @@ textarea {
   align-items: start;
 }
 
+.chef-section-premium {
+  background: linear-gradient(135deg, #21352d 0%, #31493d 100%);
+  color: #f8ede0;
+  border-radius: 3rem;
+  padding: 3rem;
+  box-shadow: 0 28px 60px rgba(24, 53, 47, 0.24);
+}
+
+.chef-section-premium .panel {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: inherit;
+}
+
+.chef-section-premium .eyebrow,
+.chef-section-premium p {
+  color: rgba(248, 237, 224, 0.72);
+}
+
+.chef-section-premium .chef-card {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 1.75rem;
+  padding: 1rem;
+}
+
+.chef-section-premium .chef-card img {
+  border-radius: 1.25rem;
+}
+
 .chef-cards {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -768,14 +848,17 @@ textarea {
 }
 
 .site-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 1.5rem;
-  padding-top: 2rem;
-  padding-bottom: 2rem;
+  padding-top: 3.5rem;
+  padding-bottom: 3.5rem;
   border-top: 1px solid var(--line);
   font-family: "Segoe UI", sans-serif;
+}
+
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
 }
 
 .site-footer strong,
@@ -787,6 +870,14 @@ textarea {
   margin-top: 0.3rem;
   color: var(--muted);
   max-width: 48ch;
+}
+
+.footer-meta {
+  color: rgba(111, 101, 89, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.66rem;
+  font-weight: 700;
 }
 
 .extadmin-shell {
@@ -862,7 +953,7 @@ textarea {
 }
 
 @media (max-width: 900px) {
-  .site-header {
+  .site-header .chrome-inner {
     grid-template-columns: 1fr;
     align-items: flex-start;
   }
@@ -890,6 +981,10 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .home-stack {
+    gap: 5rem;
+  }
+
   .trio-showcase,
   .chef-cards,
   .testimonial-cards {
@@ -910,14 +1005,17 @@ textarea {
     flex-wrap: nowrap;
     scrollbar-width: none;
   }
+
+  .footer-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 768px) {
-  .site-header,
-  .site-footer,
+  .chrome-inner,
   .page-shell {
-    padding-left: 0;
-    padding-right: 0;
+    width: min(100%, calc(100% - 1.5rem));
   }
 
   .page-shell {
@@ -1016,22 +1114,24 @@ textarea {
   }
 
   .gallery-strip {
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-bottom: 1rem;
-    padding-top: 1rem;
+    grid-template-columns: 1fr;
+    min-height: auto;
   }
-  
+
+  .gallery-strip img {
+    min-height: 200px;
+  }
+
+  .chef-section-premium {
+    padding: 1.5rem;
+  }
+
   .cart-line {
     grid-template-columns: 1fr;
   }
 
   .cart-line img {
     height: 180px;
-  }
-
-  .site-footer {
-    flex-direction: column;
   }
 }
 

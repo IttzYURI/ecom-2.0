@@ -12,3 +12,4 @@ start-*.err.log
 start-*.out.log
 dev-server*.log
 dev-*.log
+tmp/

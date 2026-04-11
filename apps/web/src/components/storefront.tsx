@@ -50,7 +50,7 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
     : fallbackGalleryImages;
 
   return (
-    <div className="stack-xl">
+    <div className="home-stack stack-xl">
       <section className="hero-editorial">
         <div className="hero-editorial-copy">
           <p className="eyebrow">Contemporary Italian dining</p>
@@ -101,7 +101,7 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
         </div>
       </section>
 
-      <section className="stat-band">
+      <section className="stat-band stat-band-premium">
         <article>
           <strong>30-45 min</strong>
           <span>Delivery estimate</span>
@@ -166,7 +166,7 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
         </div>
       </section>
 
-      <section className="chef-section">
+      <section className="chef-section chef-section-premium">
         <article className="panel tone-dark chef-story">
           <p className="eyebrow">Crafted by experts</p>
           <h2>A kitchen team focused on consistency, elegance, and flavor</h2>
@@ -211,7 +211,7 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
         </article>
       </section>
 
-      <section className="content-grid">
+      <section className="content-grid contact-bar-grid">
         <article className="panel info-card">
           <p className="eyebrow">Visit us</p>
           <h2>10 Market Street, London</h2>
@@ -222,12 +222,6 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
           <h2>+44 20 1234 5678</h2>
           <p>Bookings, allergen questions, and delivery support handled directly.</p>
         </article>
-      </section>
-
-      <section className="gallery-strip">
-        {galleryImages.slice(2, 6).map((image) => (
-          <img key={image} src={image} alt="Restaurant atmosphere" />
-        ))}
       </section>
     </div>
   );
