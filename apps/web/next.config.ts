@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
   experimental: {
     typedRoutes: true
   },
-  serverExternalPackages: ["mongodb"]
+  serverExternalPackages: ["mongodb", "stripe"]
 };
 
 export default nextConfig;

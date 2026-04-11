@@ -5,13 +5,22 @@ import {
   getStoredPaymentByExternalId,
   updateStoredPaymentStatus
 } from "../../../../../lib/payments-store";
+import { verifyStripeWebhook } from "../../../../../lib/payments";
 
 export async function POST(request: NextRequest) {
-  const payload = await request.json();
+  const rawPayload = await request.text();
+  const signature = request.headers.get("stripe-signature");
+  const payload = await verifyStripeWebhook(rawPayload, signature);
   const eventType = payload.type ?? "unknown";
-  const object = payload.data?.object ?? {};
-  const tenantId = object.metadata?.tenantId ?? "tenant_bella";
-  const externalId = object.id;
+  const object = (payload.data?.object ?? {}) as {
+    id?: string;
+    metadata?: Record<string, unknown>;
+  };
+  const tenantId =
+    typeof object.metadata === "object" && object.metadata
+      ? String(object.metadata.tenantId ?? "tenant_bella")
+      : "tenant_bella";
+  const externalId = typeof object.id === "string" ? object.id : undefined;
 
   if (
     externalId &&

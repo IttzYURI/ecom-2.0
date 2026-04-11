@@ -762,6 +762,24 @@ export function ExtAdminMediaPage({
                 Save asset
               </button>
             </form>
+            <form
+              className="form-grid"
+              method="post"
+              action="/api/v1/extadmin/media/upload"
+              encType="multipart/form-data"
+            >
+              <input type="hidden" name="tenantId" value="tenant_bella" />
+              <input name="label" placeholder="Uploaded asset label" />
+              <select name="kind" defaultValue="gallery">
+                <option value="gallery">Gallery</option>
+                <option value="hero">Hero</option>
+                <option value="general">General</option>
+              </select>
+              <input name="file" type="file" accept="image/*" />
+              <button type="submit" className="button-ghost compact-button">
+                Upload image
+              </button>
+            </form>
           </section>
           <section className="panel">
             <h3>Usage</h3>
