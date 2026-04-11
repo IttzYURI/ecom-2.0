@@ -65,10 +65,11 @@ textarea {
 .site-header,
 .site-footer,
 .page-shell {
-  max-width: 1240px;
-  margin: 0 auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  max-width: none;
+  width: 100vw;
+  margin: 0;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .site-header {
@@ -540,12 +541,23 @@ button {
 
 .gallery-strip,
 .gallery-grid {
+  display: grid;
+  gap: 1.5rem;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.gallery-strip {
+  padding: 1.5rem;
 }
 
 .gallery-strip img,
 .gallery-grid img {
   height: 240px;
+}
+
+.gallery-strip img {
+  width: 100%;
+  height: auto;
 }
 
 .form-grid {
@@ -572,6 +584,23 @@ textarea {
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.7);
   font-family: "Segoe UI", sans-serif;
+}
+
+.checkout-item-card {
+  justify-content: space-between;
+}
+
+.checkout-item-card span {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.form-notice {
+  margin: 0;
+  padding: 0.95rem 1rem;
+  border-radius: 18px;
+  font-family: "Segoe UI", sans-serif;
+  font-weight: 600;
 }
 
 .choice-card.light {
@@ -887,8 +916,8 @@ textarea {
   .site-header,
   .site-footer,
   .page-shell {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+    padding-left: 0;
+    padding-right: 0;
   }
 
   .page-shell {
@@ -986,6 +1015,13 @@ textarea {
     height: 160px;
   }
 
+  .gallery-strip {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: 1rem;
+    padding-top: 1rem;
+  }
+  
   .cart-line {
     grid-template-columns: 1fr;
   }

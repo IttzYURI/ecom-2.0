@@ -1,6 +1,15 @@
 {
   "tenant_bella": [
     {
+      "id": "audit_llfuqeoq",
+      "tenantId": "tenant_bella",
+      "createdAt": "2026-04-11T19:57:02.040Z",
+      "action": "staff.create",
+      "actorEmail": "owner@bellaroma.test",
+      "target": "nigga@123",
+      "summary": "Created staff account for tahmidnigga"
+    },
+    {
       "id": "audit_nz4mc6q1",
       "tenantId": "tenant_bella",
       "createdAt": "2026-04-11T09:36:05.795Z",

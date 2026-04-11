@@ -27,6 +27,15 @@
         "description": "hello",
         "sortOrder": 3,
         "visible": true
+      },
+      {
+        "id": "cat_hfuryvy7",
+        "tenantId": "tenant_bella",
+        "name": "sex for tahmin",
+        "slug": "fokin spicy steak",
+        "description": "fuk u",
+        "sortOrder": 4,
+        "visible": true
       }
     ],
     "menuItems": [

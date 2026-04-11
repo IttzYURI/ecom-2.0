@@ -35,6 +35,18 @@
       "name": "YURI",
       "createdAt": "2026-04-11T09:15:39.306Z",
       "updatedAt": "2026-04-11T09:15:39.306Z"
+    },
+    {
+      "id": "staff_xzln8u4b",
+      "tenantId": "tenant_bella",
+      "email": "nigga@123",
+      "passwordHash": "pbkdf2$120000$CzyXxlgcxsGg2V-FR_aASg$Y_6fGpRaRxErGOOVaAhYouI8UZD_w10newp--hKoAAo",
+      "roleIds": [
+        "role_manager"
+      ],
+      "name": "tahmidnigga",
+      "createdAt": "2026-04-11T19:57:01.963Z",
+      "updatedAt": "2026-04-11T19:57:01.963Z"
     }
   ]
 }

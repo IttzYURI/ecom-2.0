@@ -30,7 +30,7 @@
         "deliveryFee": 3.5,
         "discount": 0,
         "total": 32.5,
-        "orderStatus": "refunded",
+        "orderStatus": "pending_payment",
         "paymentStatus": "paid",
         "createdAt": "2026-04-11T10:30:00.000Z"
       }

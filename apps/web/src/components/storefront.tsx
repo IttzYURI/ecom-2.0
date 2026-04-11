@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { MenuItem, TenantBundle } from "@rcc/contracts";
 
 import { formatMoney } from "../lib/currency";
+import { PublicBookingForm, PublicCheckoutForm, PublicContactForm } from "./public-interactions";
 
 const fallbackGalleryImages = [
   "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=900&q=80",
@@ -308,35 +309,13 @@ export function CartPageContent({ bundle }: { bundle: TenantBundle }) {
   );
 }
 
-export function CheckoutPageContent() {
+export function CheckoutPageContent({ bundle }: { bundle: TenantBundle }) {
   return (
     <div className="content-grid checkout-grid">
       <section className="panel">
         <p className="eyebrow">Delivery details</p>
         <h2>Finish the order</h2>
-        <form className="form-grid">
-          <div className="split-grid">
-            <input placeholder="Full name" />
-            <input placeholder="Phone number" />
-          </div>
-          <input placeholder="Email address" />
-          <div className="split-grid">
-            <input placeholder="Postcode" />
-            <input placeholder="City" />
-          </div>
-          <input placeholder="Address line 1" />
-          <textarea rows={4} placeholder="Delivery instructions or order notes" />
-          <div className="split-grid">
-            <label className="choice-card">
-              <input type="radio" name="fulfillment" defaultChecked />
-              <span>Delivery</span>
-            </label>
-            <label className="choice-card">
-              <input type="radio" name="fulfillment" />
-              <span>Collection</span>
-            </label>
-          </div>
-        </form>
+        <PublicCheckoutForm tenantId={bundle.tenant.id} menuItems={bundle.menuItems} />
       </section>
       <aside className="panel tone-dark">
         <p className="eyebrow">Payment</p>
@@ -378,7 +357,7 @@ export function GalleryPage({ bundle }: { bundle: TenantBundle }) {
   );
 }
 
-export function BookingPage() {
+export function BookingPage({ tenantId }: { tenantId: string }) {
   return (
     <div className="content-grid">
       <section className="panel tone-dark">
@@ -391,22 +370,7 @@ export function BookingPage() {
       </section>
       <section className="panel form-panel">
         <h2>Booking request</h2>
-        <form className="form-grid">
-          <div className="split-grid">
-            <input placeholder="Full name" />
-            <input placeholder="Phone number" />
-          </div>
-          <input placeholder="Email address" />
-          <div className="split-grid">
-            <input placeholder="Party size" />
-            <input type="date" />
-          </div>
-          <input type="time" />
-          <textarea placeholder="Occasion or booking notes" rows={4} />
-          <button type="button" className="button-primary">
-            Request booking
-          </button>
-        </form>
+        <PublicBookingForm tenantId={tenantId} />
       </section>
     </div>
   );
@@ -474,14 +438,7 @@ export function ContactPage({ bundle }: { bundle: TenantBundle }) {
       </article>
       <article className="panel">
         <h2>Send an enquiry</h2>
-        <form className="form-grid">
-          <input placeholder="Your name" />
-          <input placeholder="Your email" />
-          <textarea rows={5} placeholder="Your message" />
-          <button type="button" className="button-primary">
-            Send message
-          </button>
-        </form>
+        <PublicContactForm tenantId={bundle.tenant.id} />
       </article>
     </div>
   );
