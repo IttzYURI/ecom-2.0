@@ -4,7 +4,7 @@ import type { MenuItem, TenantBundle } from "@rcc/contracts";
 
 import { formatMoney } from "../lib/currency";
 
-const galleryImages = [
+const fallbackGalleryImages = [
   "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=900&q=80",
   "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80",
   "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=900&q=80",
@@ -44,6 +44,9 @@ function MenuHighlight({ item }: { item: MenuItem }) {
 export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
   const featured = bundle.menuItems.filter((item) => item.featured).slice(0, 3);
   const signature = featured[0];
+  const galleryImages = bundle.content.galleryImages?.length
+    ? bundle.content.galleryImages
+    : fallbackGalleryImages;
 
   return (
     <div className="stack-xl">
@@ -356,7 +359,10 @@ export function CheckoutPageContent() {
   );
 }
 
-export function GalleryPage() {
+export function GalleryPage({ bundle }: { bundle: TenantBundle }) {
+  const galleryImages = bundle.content.galleryImages?.length
+    ? bundle.content.galleryImages
+    : fallbackGalleryImages;
   return (
     <section className="stack-xl">
       <article className="panel tone-warm">

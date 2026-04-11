@@ -1,0 +1,17 @@
+{
+  "tenant_bella": {
+    "heroTitle": "hohohoho",
+    "heroSubtitle": "Delivery and collection with no marketplace detour.",
+    "about": "tahmid niggatahmid nigga tahmid niggatahmid niggatahmid nigga tahmid nigga",
+    "faq": [
+      {
+        "question": "How long does delivery take?",
+        "answer": "Typical delivery time is 30 to 45 minutes depending on postcode."
+      },
+      {
+        "question": "Do you support collection?",
+        "answer": "Yes, collection is available every day during opening hours."
+      }
+    ]
+  }
+}

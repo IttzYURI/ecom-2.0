@@ -760,6 +760,68 @@ textarea {
   max-width: 48ch;
 }
 
+.extadmin-shell {
+  padding-top: 1rem;
+}
+
+.extadmin-topbar {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.extadmin-topbar h1 {
+  margin: 0.3rem 0 0.5rem;
+}
+
+.extadmin-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.extadmin-nav a {
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.extadmin-login-shell {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+.extadmin-login-card {
+  max-width: 560px;
+  margin: 0 auto;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.form-error {
+  margin: 0;
+  color: #9d2f2f;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.inline-status-form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.inline-status-form select {
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  padding: 0.55rem 0.7rem;
+  background: rgba(255, 255, 255, 0.86);
+  font-family: "Segoe UI", sans-serif;
+}
+
 @media (max-width: 900px) {
   .site-header {
     grid-template-columns: 1fr;
@@ -802,6 +864,12 @@ textarea {
 
   .hero-editorial-visual {
     min-height: 420px;
+  }
+
+  .extadmin-nav {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
   }
 }
 

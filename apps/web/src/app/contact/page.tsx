@@ -1,9 +1,12 @@
 import { LayoutShell } from "../../components/layout-shell";
 import { ContactPage } from "../../components/storefront";
-import { getDefaultTenant, getTenantBundle } from "../../lib/mock-data";
+import { getRuntimeTenantBundle } from "../../lib/content-store";
+import { getDefaultTenant } from "../../lib/mock-data";
 
-export default function ContactRoute() {
-  const bundle = getTenantBundle(getDefaultTenant().id);
+export const dynamic = "force-dynamic";
+
+export default async function ContactRoute() {
+  const bundle = await getRuntimeTenantBundle(getDefaultTenant().id);
 
   return (
     <LayoutShell

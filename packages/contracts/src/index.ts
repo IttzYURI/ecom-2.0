@@ -163,6 +163,7 @@ export interface StorefrontContent {
   heroTitle: string;
   heroSubtitle: string;
   about: string;
+  galleryImages?: string[];
   faq: Array<{ question: string; answer: string }>;
 }
 

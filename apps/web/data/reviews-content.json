@@ -1,0 +1,11 @@
+{
+  "tenant_bella": [
+    {
+      "id": "review_1",
+      "tenantId": "tenant_bella",
+      "author": "James",
+      "rating": 5,
+      "content": "Fast delivery, excellent pizza, and much better than ordering through a marketplace."
+    }
+  ]
+}

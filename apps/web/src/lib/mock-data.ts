@@ -63,6 +63,14 @@ const storefrontContent: Record<string, StorefrontContent> = {
     heroSubtitle: "Delivery and collection with no marketplace detour.",
     about:
       "Bella Roma serves fast-moving, premium Italian comfort food with a focus on direct ordering and repeat customers.",
+    galleryImages: [
+      "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1559339352-11d035aa65de?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=900&q=80"
+    ],
     faq: [
       {
         question: "How long does delivery take?",
@@ -79,6 +87,14 @@ const storefrontContent: Record<string, StorefrontContent> = {
     heroSubtitle: "Collections, delivery, meal deals, and bold flavors.",
     about:
       "Spice Garden combines neighborhood reliability with a premium online ordering experience.",
+    galleryImages: [
+      "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1506084868230-bb9d95c24759?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1481833761820-0509d3217039?auto=format&fit=crop&w=900&q=80"
+    ],
     faq: [
       {
         question: "Can I request spice levels?",
@@ -352,7 +368,33 @@ export function getDefaultTenant(): Tenant {
   return tenants[0];
 }
 
-export function getTenantBundle(tenantId: string): TenantBundle {
+export function getDefaultTenantCopy(tenantId: string): Tenant {
+  const tenant = tenants.find((entry) => entry.id === tenantId);
+
+  if (!tenant) {
+    throw new Error(`Unknown tenant: ${tenantId}`);
+  }
+
+  return JSON.parse(JSON.stringify(tenant)) as Tenant;
+}
+
+export function getDefaultStorefrontContent(tenantId: string): StorefrontContent {
+  const content = storefrontContent[tenantId];
+
+  if (!content) {
+    throw new Error(`Unknown storefront content for tenant: ${tenantId}`);
+  }
+
+  return JSON.parse(JSON.stringify(content)) as StorefrontContent;
+}
+
+export function getTenantBundle(
+  tenantId: string,
+  contentOverride?: StorefrontContent,
+  categoriesOverride?: Category[],
+  menuItemsOverride?: MenuItem[],
+  tenantOverride?: Tenant
+): TenantBundle {
   const tenant = tenants.find((entry) => entry.id === tenantId);
 
   if (!tenant) {
@@ -360,11 +402,11 @@ export function getTenantBundle(tenantId: string): TenantBundle {
   }
 
   return {
-    tenant,
-    content: storefrontContent[tenantId],
-    categories: categories.filter((entry) => entry.tenantId === tenantId),
+    tenant: tenantOverride ?? tenant,
+    content: contentOverride ?? storefrontContent[tenantId],
+    categories: categoriesOverride ?? categories.filter((entry) => entry.tenantId === tenantId),
     optionGroups: optionGroups.filter((entry) => entry.tenantId === tenantId),
-    menuItems: menuItems.filter((entry) => entry.tenantId === tenantId),
+    menuItems: menuItemsOverride ?? menuItems.filter((entry) => entry.tenantId === tenantId),
     promotions: promotions.filter((entry) => entry.tenantId === tenantId),
     reviews: reviews.filter((entry) => entry.tenantId === tenantId),
     bookings: bookings.filter((entry) => entry.tenantId === tenantId),
@@ -376,4 +418,28 @@ export function getTenantBundle(tenantId: string): TenantBundle {
 
 export function listTenants(): Tenant[] {
   return tenants;
+}
+
+export function getDefaultCategories(tenantId: string): Category[] {
+  return JSON.parse(
+    JSON.stringify(categories.filter((entry) => entry.tenantId === tenantId))
+  ) as Category[];
+}
+
+export function getDefaultMenuItems(tenantId: string): MenuItem[] {
+  return JSON.parse(
+    JSON.stringify(menuItems.filter((entry) => entry.tenantId === tenantId))
+  ) as MenuItem[];
+}
+
+export function getDefaultRoles(tenantId: string): Role[] {
+  return JSON.parse(
+    JSON.stringify(roles.filter((entry) => entry.tenantId === tenantId))
+  ) as Role[];
+}
+
+export function getDefaultStaff(tenantId: string): StaffMember[] {
+  return JSON.parse(
+    JSON.stringify(staff.filter((entry) => entry.tenantId === tenantId))
+  ) as StaffMember[];
 }

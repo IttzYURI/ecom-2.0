@@ -1,0 +1,40 @@
+{
+  "tenant_bella": [
+    {
+      "id": "staff_owner",
+      "tenantId": "tenant_bella",
+      "email": "owner@bellaroma.test",
+      "passwordHash": "pbkdf2$120000$Tm8tq7mmAIr2QxDKMca-JQ$-0NnkF0ZfbortaE0mbPkJs0zkhoKv1C_QgBXCSeUCTg",
+      "roleIds": [
+        "role_owner"
+      ],
+      "name": "Bella Roma Owner",
+      "createdAt": "2026-04-11T01:54:31.406Z",
+      "updatedAt": "2026-04-11T01:54:31.406Z"
+    },
+    {
+      "id": "staff_1",
+      "tenantId": "tenant_bella",
+      "email": "luca@bellaroma.test",
+      "passwordHash": "pbkdf2$120000$LAPlzeXyDgaA585eMVt8oA$63U93bMknTMlPf3n9D-61ea-6MCwltG7D5EQtCpByDY",
+      "roleIds": [
+        "role_owner"
+      ],
+      "name": "Luca Romano",
+      "createdAt": "2026-04-11T01:54:31.455Z",
+      "updatedAt": "2026-04-11T01:54:31.455Z"
+    },
+    {
+      "id": "staff_2",
+      "tenantId": "tenant_bella",
+      "email": "sara@bellaroma.test",
+      "passwordHash": "pbkdf2$120000$mPQ5azLprIyQj6D2PKiRug$DaV_QorDXDjIg7YAUr3Z0pZWPb6_T7KOn9CZ143lnQw",
+      "roleIds": [
+        "role_manager"
+      ],
+      "name": "Sara Dean",
+      "createdAt": "2026-04-11T01:54:31.503Z",
+      "updatedAt": "2026-04-11T01:54:31.503Z"
+    }
+  ]
+}

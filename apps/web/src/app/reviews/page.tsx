@@ -1,9 +1,12 @@
 import { LayoutShell } from "../../components/layout-shell";
 import { ReviewsPage } from "../../components/storefront";
-import { getDefaultTenant, getTenantBundle } from "../../lib/mock-data";
+import { getRuntimeTenantBundle } from "../../lib/content-store";
+import { getDefaultTenant } from "../../lib/mock-data";
 
-export default function ReviewsRoute() {
-  const bundle = getTenantBundle(getDefaultTenant().id);
+export const dynamic = "force-dynamic";
+
+export default async function ReviewsRoute() {
+  const bundle = await getRuntimeTenantBundle(getDefaultTenant().id);
 
   return (
     <LayoutShell

@@ -1,0 +1,53 @@
+{
+  "tenant_bella": {
+    "orders": [
+      {
+        "id": "order_1",
+        "tenantId": "tenant_bella",
+        "orderNumber": "BR-1042",
+        "customerName": "Noah Carter",
+        "customerEmail": "noah@example.com",
+        "customerPhone": "+44 7700 900222",
+        "fulfillmentType": "delivery",
+        "address": "12 Baker Street, London",
+        "items": [
+          {
+            "menuItemId": "item_margherita",
+            "name": "Margherita",
+            "quantity": 2,
+            "unitPrice": 14.5,
+            "selectedOptions": [
+              {
+                "optionGroupId": "grp_size",
+                "optionIds": [
+                  "opt_large"
+                ]
+              }
+            ]
+          }
+        ],
+        "subtotal": 29,
+        "deliveryFee": 3.5,
+        "discount": 0,
+        "total": 32.5,
+        "orderStatus": "refunded",
+        "paymentStatus": "paid",
+        "createdAt": "2026-04-11T10:30:00.000Z"
+      }
+    ],
+    "bookings": [
+      {
+        "id": "booking_1",
+        "tenantId": "tenant_bella",
+        "customerName": "Mia Turner",
+        "email": "mia@example.com",
+        "phone": "+44 7700 900111",
+        "partySize": 4,
+        "bookingDate": "2026-04-13",
+        "bookingTime": "19:30",
+        "notes": "Window seat if possible",
+        "status": "pending"
+      }
+    ]
+  }
+}
