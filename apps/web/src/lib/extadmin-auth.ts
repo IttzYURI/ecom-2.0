@@ -109,6 +109,10 @@ export async function verifyExtAdminSessionToken(token: string | undefined) {
   }
 }
 
+export async function getExtAdminSession(request: NextRequest) {
+  return verifyExtAdminSessionToken(request.cookies.get(SESSION_COOKIE_NAME)?.value);
+}
+
 export function getExtAdminCookieOptions() {
   return {
     httpOnly: true,
@@ -121,7 +125,7 @@ export function getExtAdminCookieOptions() {
 
 export async function hasValidExtAdminSession(request: NextRequest) {
   return Boolean(
-    await verifyExtAdminSessionToken(request.cookies.get(SESSION_COOKIE_NAME)?.value)
+    await getExtAdminSession(request)
   );
 }
 

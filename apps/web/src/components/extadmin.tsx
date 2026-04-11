@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { formatMoney } from "../lib/currency";
+import type { AuditEntry } from "../lib/audit-store";
 
 import type { TenantBundle } from "@rcc/contracts";
 
@@ -609,9 +610,25 @@ export function ExtAdminSettingsPage({ bundle }: { bundle: TenantBundle }) {
   );
 }
 
-export function ExtAdminStaffPage({ bundle }: { bundle: TenantBundle }) {
+export function ExtAdminStaffPage({
+  bundle,
+  auditEntries,
+  status,
+  message
+}: {
+  bundle: TenantBundle;
+  auditEntries: AuditEntry[];
+  status?: string;
+  message?: string;
+}) {
   return (
     <section className="stack">
+      {message ? (
+        <article className={`panel ${status === "error" ? "notice-error" : "notice-success"}`}>
+          <strong>{status === "error" ? "Could not complete that action." : "Saved."}</strong>
+          <p>{message}</p>
+        </article>
+      ) : null}
       <article className="panel">
         <h2>Team access</h2>
         <div className="content-grid">
@@ -640,6 +657,7 @@ export function ExtAdminStaffPage({ bundle }: { bundle: TenantBundle }) {
               <li><strong>Owner login</strong><span>Configured from env or seeded into Mongo automatically</span></li>
               <li><strong>Staff accounts</strong><span>Created here and can be reassigned or reset without code changes</span></li>
               <li><strong>Access control</strong><span>Role assignment is persisted with each admin account</span></li>
+              <li><strong>Validation</strong><span>Duplicate emails and weak passwords are blocked server-side</span></li>
             </ul>
           </section>
         </div>
@@ -695,6 +713,18 @@ export function ExtAdminStaffPage({ bundle }: { bundle: TenantBundle }) {
             </section>
           ))}
         </div>
+      </article>
+
+      <article className="panel">
+        <h2>Recent access activity</h2>
+        <ul className="plain-list">
+          {auditEntries.map((entry) => (
+            <li key={entry.id}>
+              <strong>{entry.summary}</strong>
+              <span>{entry.actorEmail} | {new Date(entry.createdAt).toLocaleString()}</span>
+            </li>
+          ))}
+        </ul>
       </article>
     </section>
   );

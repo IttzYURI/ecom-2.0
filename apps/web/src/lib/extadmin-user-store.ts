@@ -142,6 +142,12 @@ export async function getStoredExtAdminUsers(tenantId: string) {
   return store[tenantId] ?? (await buildSeedUsers(tenantId));
 }
 
+export async function findStoredExtAdminUserByEmail(tenantId: string, email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const users = await getStoredExtAdminUsers(tenantId);
+  return users.find((entry) => entry.email === normalizedEmail) ?? null;
+}
+
 export async function getStoredStaffMembers(tenantId: string) {
   const users = await getStoredExtAdminUsers(tenantId);
   return users.map(mapUserToStaffMember);
@@ -156,6 +162,12 @@ export async function createStoredExtAdminUser(
     roleIds: string[];
   }
 ) {
+  const existing = await findStoredExtAdminUserByEmail(tenantId, input.email);
+
+  if (existing) {
+    throw new Error("DUPLICATE_EMAIL");
+  }
+
   const now = new Date().toISOString();
   const user: ExtAdminUserRecord = {
     id: createId("staff"),
@@ -186,19 +198,20 @@ export async function deleteStoredExtAdminUser(tenantId: string, userId: string)
   const ownerId = getSeedOwnerDefaults().id;
 
   if (userId === ownerId) {
-    return;
+    return false;
   }
 
   if (isMongoConfigured()) {
     const collection = await getUsersCollection();
-    await collection.deleteOne({ tenantId, id: userId });
-    return;
+    const result = await collection.deleteOne({ tenantId, id: userId });
+    return result.deletedCount > 0;
   }
 
   const store = await readUsersStore();
   const current = store[tenantId] ?? [];
   store[tenantId] = current.filter((user) => user.id !== userId);
   await writeUsersStore(store);
+  return current.length !== store[tenantId].length;
 }
 
 export async function resetStoredExtAdminUserPassword(
@@ -260,4 +273,9 @@ export async function validateExtAdminUser(email: string, password: string) {
   }
 
   return verifyPassword(password, owner.passwordHash);
+}
+
+export async function getStoredExtAdminUserById(tenantId: string, userId: string) {
+  const users = await getStoredExtAdminUsers(tenantId);
+  return users.find((entry) => entry.id === userId) ?? null;
 }

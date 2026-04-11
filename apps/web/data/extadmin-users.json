@@ -35,6 +35,18 @@
       "name": "Sara Dean",
       "createdAt": "2026-04-11T01:54:31.503Z",
       "updatedAt": "2026-04-11T01:54:31.503Z"
+    },
+    {
+      "id": "staff_hpzv4auk",
+      "tenantId": "tenant_bella",
+      "email": "test@gmail.com",
+      "passwordHash": "pbkdf2$120000$htXl6ICiXUUQI_DQtQFUEg$rWj5kgQDW0A3SDJ7LDS9B7JimSv7-prMThk-PrqGZoY",
+      "roleIds": [
+        "role_manager"
+      ],
+      "name": "tahmid",
+      "createdAt": "2026-04-11T01:58:11.328Z",
+      "updatedAt": "2026-04-11T01:58:11.328Z"
     }
   ]
 }

@@ -47,7 +47,8 @@ export async function getMongoDb() {
       db.collection("extadmin_users").createIndex(
         { tenantId: 1, email: 1 },
         { unique: true }
-      )
+      ),
+      db.collection("audit_log").createIndex({ tenantId: 1, createdAt: -1 })
     ]).then(() => undefined);
   }
 
