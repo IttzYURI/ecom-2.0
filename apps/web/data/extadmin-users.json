@@ -13,30 +13,6 @@
       "updatedAt": "2026-04-11T01:54:31.406Z"
     },
     {
-      "id": "staff_1",
-      "tenantId": "tenant_bella",
-      "email": "luca@bellaroma.test",
-      "passwordHash": "pbkdf2$120000$LAPlzeXyDgaA585eMVt8oA$63U93bMknTMlPf3n9D-61ea-6MCwltG7D5EQtCpByDY",
-      "roleIds": [
-        "role_owner"
-      ],
-      "name": "Luca Romano",
-      "createdAt": "2026-04-11T01:54:31.455Z",
-      "updatedAt": "2026-04-11T01:54:31.455Z"
-    },
-    {
-      "id": "staff_2",
-      "tenantId": "tenant_bella",
-      "email": "sara@bellaroma.test",
-      "passwordHash": "pbkdf2$120000$mPQ5azLprIyQj6D2PKiRug$DaV_QorDXDjIg7YAUr3Z0pZWPb6_T7KOn9CZ143lnQw",
-      "roleIds": [
-        "role_manager"
-      ],
-      "name": "Sara Dean",
-      "createdAt": "2026-04-11T01:54:31.503Z",
-      "updatedAt": "2026-04-11T01:54:31.503Z"
-    },
-    {
       "id": "staff_hpzv4auk",
       "tenantId": "tenant_bella",
       "email": "test@gmail.com",
@@ -47,6 +23,18 @@
       "name": "tahmid",
       "createdAt": "2026-04-11T01:58:11.328Z",
       "updatedAt": "2026-04-11T01:58:11.328Z"
+    },
+    {
+      "id": "staff_m366yn3u",
+      "tenantId": "tenant_bella",
+      "email": "abdurrahmanpolash4@gmail.com",
+      "passwordHash": "pbkdf2$120000$dOFePrN2spYkhZi4mK8Y_w$u0jc_kuvjsVlGKGPiRsjufLh9dQ0e_b38IFkX-R7Iak",
+      "roleIds": [
+        "role_owner"
+      ],
+      "name": "YURI",
+      "createdAt": "2026-04-11T09:15:39.306Z",
+      "updatedAt": "2026-04-11T09:15:39.306Z"
     }
   ]
 }

@@ -1,1 +1,31 @@
-{}
+{
+  "tenant_bella": [
+    {
+      "id": "audit_nz4mc6q1",
+      "tenantId": "tenant_bella",
+      "createdAt": "2026-04-11T09:36:05.795Z",
+      "action": "staff.delete",
+      "actorEmail": "owner@bellaroma.test",
+      "target": "sara@bellaroma.test",
+      "summary": "Removed staff access for Sara Dean"
+    },
+    {
+      "id": "audit_04as220l",
+      "tenantId": "tenant_bella",
+      "createdAt": "2026-04-11T09:35:59.587Z",
+      "action": "staff.delete",
+      "actorEmail": "owner@bellaroma.test",
+      "target": "luca@bellaroma.test",
+      "summary": "Removed staff access for Luca Romano"
+    },
+    {
+      "id": "audit_m8y126od",
+      "tenantId": "tenant_bella",
+      "createdAt": "2026-04-11T09:15:39.356Z",
+      "action": "staff.create",
+      "actorEmail": "owner@bellaroma.test",
+      "target": "abdurrahmanpolash4@gmail.com",
+      "summary": "Created staff account for YURI"
+    }
+  ]
+}
