@@ -571,6 +571,137 @@ button {
   margin-bottom: 1.4rem;
 }
 
+.menu-page {
+  gap: 3rem;
+}
+
+.menu-hero {
+  display: block;
+}
+
+.menu-hero-copy {
+  padding: 2.5rem;
+}
+
+.menu-category-nav {
+  position: sticky;
+  top: 5.6rem;
+  z-index: 12;
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  padding: 1rem;
+  border-radius: 999px;
+  background: rgba(255, 248, 239, 0.86);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(40, 28, 18, 0.08);
+  box-shadow: 0 14px 30px rgba(67, 44, 24, 0.08);
+}
+
+.menu-category-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 1.15rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(40, 28, 18, 0.08);
+  font-family: "Segoe UI", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--brand-dark);
+}
+
+.menu-category-section {
+  display: grid;
+  gap: 1.5rem;
+  padding: 2rem;
+  border-radius: 2.5rem;
+  background: rgba(255, 253, 249, 0.7);
+  border: 1px solid rgba(40, 28, 18, 0.08);
+  box-shadow: var(--shadow);
+  scroll-margin-top: 8rem;
+}
+
+.menu-category-heading {
+  margin-bottom: 0;
+}
+
+.menu-category-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  background: rgba(175, 62, 42, 0.08);
+  color: var(--brand-dark);
+  font-family: "Segoe UI", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.menu-order-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+}
+
+.menu-order-card {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(40, 28, 18, 0.08);
+  box-shadow: 0 16px 34px rgba(67, 44, 24, 0.08);
+}
+
+.menu-order-card-media img {
+  height: 100%;
+  min-height: 180px;
+}
+
+.menu-order-card-body {
+  display: grid;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.menu-order-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.menu-order-card-top h3 {
+  margin: 0 0 0.35rem;
+}
+
+.menu-order-card-top p {
+  margin: 0;
+  color: var(--muted);
+  font-family: "Segoe UI", sans-serif;
+}
+
+.menu-order-card-top strong {
+  white-space: nowrap;
+  font-size: 1.15rem;
+}
+
+.menu-order-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: auto;
+}
+
 .plain-list {
   margin: 0;
   padding: 0;
@@ -975,9 +1106,14 @@ textarea {
   }
 
   .hero-editorial,
+  .menu-hero,
   .split-story,
   .chef-section,
   .testimonial-reservation-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-order-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1055,6 +1191,17 @@ textarea {
     font-size: clamp(2.7rem, 12vw, 4.6rem);
   }
 
+  .menu-category-nav {
+    top: 5rem;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    scrollbar-width: none;
+  }
+
+  .menu-category-nav::-webkit-scrollbar {
+    display: none;
+  }
+
   .hero-editorial-visual {
     min-height: 360px;
   }
@@ -1100,6 +1247,14 @@ textarea {
   .chef-cards,
   .testimonial-cards {
     grid-template-columns: 1fr;
+  }
+
+  .menu-order-card {
+    grid-template-columns: 1fr;
+  }
+
+  .menu-order-card-media img {
+    min-height: 220px;
   }
 
   .showcase-dish img {
@@ -1166,6 +1321,10 @@ textarea {
   .card-grid,
   .stat-band {
     grid-template-columns: 1fr;
+  }
+
+  .menu-category-section {
+    padding: 1.25rem;
   }
 
   .panel {

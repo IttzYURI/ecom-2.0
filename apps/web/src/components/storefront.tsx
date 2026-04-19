@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 import type { MenuItem, TenantBundle } from "@rcc/contracts";
@@ -14,10 +15,24 @@ const fallbackGalleryImages = [
   "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=900&q=80"
 ];
 
+function ResponsiveImage({
+  src,
+  alt,
+  className,
+  sizes = "100vw"
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+  sizes?: string;
+}) {
+  return <Image src={src} alt={alt} width={1200} height={900} sizes={sizes} className={className} />;
+}
+
 function MenuHighlight({ item }: { item: MenuItem }) {
   return (
     <article className="menu-card">
-      <img src={item.image} alt={item.name} />
+      <ResponsiveImage src={item.image} alt={item.name} sizes="(max-width: 768px) 100vw, 33vw" />
       <div className="menu-card-body">
         <div className="menu-card-topline">
           <h3>{item.name}</h3>
@@ -35,6 +50,42 @@ function MenuHighlight({ item }: { item: MenuItem }) {
           </Link>
           <Link href="/menu" className="text-link">
             Customize
+          </Link>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function toSectionId(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+
+function MenuOrderingCard({ item }: { item: MenuItem }) {
+  return (
+    <article className="menu-order-card">
+      <div className="menu-order-card-media">
+        <ResponsiveImage src={item.image} alt={item.name} sizes="(max-width: 768px) 100vw, 50vw" />
+      </div>
+      <div className="menu-order-card-body">
+        <div className="menu-order-card-top">
+          <div>
+            <h3>{item.name}</h3>
+            <p>{item.description}</p>
+          </div>
+          <strong>{formatMoney(item.basePrice)}</strong>
+        </div>
+        <div className="chip-row">
+          {item.bestSeller ? <span className="chip">Best seller</span> : null}
+          {item.optionGroupIds.length ? <span className="chip">Customizable</span> : null}
+          {item.available ? <span className="chip">Available now</span> : <span className="chip">Sold out</span>}
+        </div>
+        <div className="menu-order-card-actions">
+          <Link href="/cart" className="button-primary compact-button">
+            Add to order
+          </Link>
+          <Link href="/checkout" className="text-link">
+            Quick checkout
           </Link>
         </div>
       </div>
@@ -71,7 +122,7 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
               Reserve your table
             </Link>
             <Link href="/menu" className="button-ghost">
-              Explore menu
+              Order Now
             </Link>
           </div>
           <div className="hero-feature-list">
@@ -91,7 +142,12 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
         </div>
         <div className="hero-editorial-visual">
           <div className="hero-plate-wrap">
-            <img src={bundle.tenant.branding.heroImage} alt={bundle.tenant.name} className="hero-plate" />
+            <ResponsiveImage
+              src={bundle.tenant.branding.heroImage}
+              alt={bundle.tenant.name}
+              className="hero-plate"
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
           </div>
           <div className="floating-callout">
             <p className="eyebrow">Signature pick</p>
@@ -140,7 +196,7 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
       <section className="trio-showcase">
         {featured.map((item) => (
           <article key={item.id} className="showcase-dish">
-            <img src={item.image} alt={item.name} />
+            <ResponsiveImage src={item.image} alt={item.name} sizes="(max-width: 768px) 100vw, 33vw" />
             <div className="showcase-dish-copy">
               <h3>{item.name}</h3>
               <p>{formatMoney(item.basePrice)}</p>
@@ -178,7 +234,7 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
         <div className="chef-cards">
           {["Marco Bellini", "Elena Rossi", "Takeshi Mori"].map((name, index) => (
             <article key={name} className="panel chef-card">
-              <img src={galleryImages[index]} alt={name} />
+              <ResponsiveImage src={galleryImages[index]} alt={name} sizes="(max-width: 768px) 100vw, 33vw" />
               <h3>{name}</h3>
               <p>{index === 0 ? "Head Chef" : index === 1 ? "Pastry Chef" : "Sous Chef"}</p>
             </article>
@@ -200,7 +256,11 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
           </div>
         </article>
         <article className="panel reservation-banner">
-          <img src={galleryImages[1]} alt="Restaurant table service" />
+          <ResponsiveImage
+            src={galleryImages[1]}
+            alt="Restaurant table service"
+            sizes="(max-width: 768px) 100vw, 50vw"
+          />
           <div className="reservation-banner-card">
             <p className="eyebrow">Reserve your table</p>
             <h3>Book an evening built around the full Bella Roma experience</h3>
@@ -228,32 +288,47 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
 }
 
 export function MenuPage({ bundle }: { bundle: TenantBundle }) {
+  const visibleCategories = bundle.categories.filter((category) =>
+    bundle.menuItems.some((item) => item.categoryIds.includes(category.id))
+  );
   return (
-    <div className="stack-xl">
-      <section className="panel tone-dark">
-        <p className="eyebrow">Menu overview</p>
-        <h2>Built for browsing quickly and ordering confidently</h2>
-        <p>
-          Every dish can support sizes, add-ons, and special requests. Prices shown
-          here are the base entry point before customization.
-        </p>
+    <div className="menu-page stack-xl">
+      <section className="menu-hero">
+        <article className="panel tone-dark menu-hero-copy">
+          <p className="eyebrow">Menu overview</p>
+          <h2>Built for browsing quickly and ordering confidently</h2>
+          <p>
+            Every dish can support sizes, add-ons, and special requests. Browse by
+            section, jump to favorites fast, and order directly without marketplace
+            markups.
+          </p>
+        </article>
       </section>
 
-      {bundle.categories.map((category) => {
+      <nav className="menu-category-nav" aria-label="Menu categories">
+        {visibleCategories.map((category) => (
+          <a key={category.id} href={`#${toSectionId(category.name)}`} className="menu-category-pill">
+            {category.name}
+          </a>
+        ))}
+      </nav>
+
+      {visibleCategories.map((category) => {
         const items = bundle.menuItems.filter((item) => item.categoryIds.includes(category.id));
 
         return (
-          <article key={category.id} className="panel">
-            <div className="section-heading">
+          <article key={category.id} id={toSectionId(category.name)} className="menu-category-section">
+            <div className="section-heading menu-category-heading">
               <div>
                 <p className="eyebrow">Category</p>
                 <h2>{category.name}</h2>
                 <p>{category.description}</p>
               </div>
+              <span className="menu-category-count">{items.length} dishes</span>
             </div>
-            <div className="card-grid">
+            <div className="menu-order-grid">
               {items.map((item) => (
-                <MenuHighlight key={item.id} item={item} />
+                <MenuOrderingCard key={item.id} item={item} />
               ))}
             </div>
           </article>
@@ -276,7 +351,7 @@ export function CartPageContent({ bundle }: { bundle: TenantBundle }) {
         <div className="cart-lines">
           {lines.map((item) => (
             <article key={item.id} className="cart-line">
-              <img src={item.image} alt={item.name} />
+              <ResponsiveImage src={item.image} alt={item.name} sizes="160px" />
               <div>
                 <strong>{item.name}</strong>
                 <p>{item.description}</p>
@@ -344,7 +419,7 @@ export function GalleryPage({ bundle }: { bundle: TenantBundle }) {
       </article>
       <div className="gallery-grid">
         {galleryImages.map((image) => (
-          <img key={image} src={image} alt="Restaurant gallery" />
+          <ResponsiveImage key={image} src={image} alt="Restaurant gallery" sizes="(max-width: 768px) 100vw, 33vw" />
         ))}
       </div>
     </section>
