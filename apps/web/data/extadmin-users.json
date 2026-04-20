@@ -4,49 +4,25 @@
       "id": "staff_owner",
       "tenantId": "tenant_bella",
       "email": "owner@bellaroma.test",
-      "passwordHash": "pbkdf2$120000$Tm8tq7mmAIr2QxDKMca-JQ$-0NnkF0ZfbortaE0mbPkJs0zkhoKv1C_QgBXCSeUCTg",
+      "passwordHash": "pbkdf2$120000$m5WwqKJPaomdSc4e3gHrIA$ar6f2fgCf4eHVt5hpEVH2EvKRP6XVgoTePdULTJhVos",
       "roleIds": [
         "role_owner"
       ],
       "name": "Bella Roma Owner",
       "createdAt": "2026-04-11T01:54:31.406Z",
-      "updatedAt": "2026-04-11T01:54:31.406Z"
+      "updatedAt": "2026-04-20T00:23:45.184Z"
     },
     {
-      "id": "staff_hpzv4auk",
+      "id": "staff_2tad6s86",
       "tenantId": "tenant_bella",
       "email": "test@gmail.com",
-      "passwordHash": "pbkdf2$120000$htXl6ICiXUUQI_DQtQFUEg$rWj5kgQDW0A3SDJ7LDS9B7JimSv7-prMThk-PrqGZoY",
-      "roleIds": [
-        "role_manager"
-      ],
-      "name": "tahmid",
-      "createdAt": "2026-04-11T01:58:11.328Z",
-      "updatedAt": "2026-04-11T01:58:11.328Z"
-    },
-    {
-      "id": "staff_m366yn3u",
-      "tenantId": "tenant_bella",
-      "email": "abdurrahmanpolash4@gmail.com",
-      "passwordHash": "pbkdf2$120000$dOFePrN2spYkhZi4mK8Y_w$u0jc_kuvjsVlGKGPiRsjufLh9dQ0e_b38IFkX-R7Iak",
+      "passwordHash": "pbkdf2$120000$CK_xBMwvf_TsGUq3lPWotg$P3Z5eez8FYr6j6g9AjWp5pFAcQqHsRA_X4AjRFDYGbg",
       "roleIds": [
         "role_owner"
       ],
-      "name": "YURI",
-      "createdAt": "2026-04-11T09:15:39.306Z",
-      "updatedAt": "2026-04-11T09:15:39.306Z"
-    },
-    {
-      "id": "staff_xzln8u4b",
-      "tenantId": "tenant_bella",
-      "email": "nigga@123",
-      "passwordHash": "pbkdf2$120000$CzyXxlgcxsGg2V-FR_aASg$Y_6fGpRaRxErGOOVaAhYouI8UZD_w10newp--hKoAAo",
-      "roleIds": [
-        "role_manager"
-      ],
-      "name": "tahmidnigga",
-      "createdAt": "2026-04-11T19:57:01.963Z",
-      "updatedAt": "2026-04-11T19:57:01.963Z"
+      "name": "test",
+      "createdAt": "2026-04-20T00:33:16.433Z",
+      "updatedAt": "2026-04-20T00:33:16.433Z"
     }
   ]
 }

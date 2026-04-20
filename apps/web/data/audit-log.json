@@ -1,6 +1,69 @@
 {
   "tenant_bella": [
     {
+      "id": "audit_dpssb0h7",
+      "tenantId": "tenant_bella",
+      "createdAt": "2026-04-20T00:33:16.482Z",
+      "action": "staff.create",
+      "actorEmail": "jakku@nigga.com",
+      "target": "test@gmail.com",
+      "summary": "Created staff account for test"
+    },
+    {
+      "id": "audit_rik7lzsg",
+      "tenantId": "tenant_bella",
+      "createdAt": "2026-04-20T00:32:35.717Z",
+      "action": "staff.delete",
+      "actorEmail": "jakku@nigga.com",
+      "target": "test@gmail.com",
+      "summary": "Removed staff access for tahmid"
+    },
+    {
+      "id": "audit_rfg8yj5c",
+      "tenantId": "tenant_bella",
+      "createdAt": "2026-04-20T00:32:32.750Z",
+      "action": "staff.delete",
+      "actorEmail": "jakku@nigga.com",
+      "target": "abdurrahmanpolash4@gmail.com",
+      "summary": "Removed staff access for YURI"
+    },
+    {
+      "id": "audit_ecbhrci5",
+      "tenantId": "tenant_bella",
+      "createdAt": "2026-04-20T00:32:26.599Z",
+      "action": "staff.delete",
+      "actorEmail": "jakku@nigga.com",
+      "target": "nigga@123",
+      "summary": "Removed staff access for tahmidnigga"
+    },
+    {
+      "id": "audit_h07v4h2d",
+      "tenantId": "tenant_bella",
+      "createdAt": "2026-04-20T00:32:20.793Z",
+      "action": "staff.delete",
+      "actorEmail": "jakku@nigga.com",
+      "target": "jakku@nigga.com",
+      "summary": "Removed staff access for jakku"
+    },
+    {
+      "id": "audit_auktmu1w",
+      "tenantId": "tenant_bella",
+      "createdAt": "2026-04-20T00:26:08.809Z",
+      "action": "staff.create",
+      "actorEmail": "owner@bellaroma.test",
+      "target": "jakku@nigga.com",
+      "summary": "Created staff account for jakku"
+    },
+    {
+      "id": "audit_imbu9i9b",
+      "tenantId": "tenant_bella",
+      "createdAt": "2026-04-20T00:23:45.185Z",
+      "action": "staff.password.reset",
+      "actorEmail": "owner@bellaroma.test",
+      "target": "owner@bellaroma.test",
+      "summary": "Reset password for Bella Roma Owner"
+    },
+    {
       "id": "audit_llfuqeoq",
       "tenantId": "tenant_bella",
       "createdAt": "2026-04-11T19:57:02.040Z",

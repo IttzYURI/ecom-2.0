@@ -36,6 +36,15 @@
         "description": "fuk u",
         "sortOrder": 4,
         "visible": true
+      },
+      {
+        "id": "cat_a7j1qp6n",
+        "tenantId": "tenant_bella",
+        "name": "sexxxxxxx",
+        "slug": "sexxxxxxx",
+        "description": "",
+        "sortOrder": 5,
+        "visible": true
       }
     ],
     "menuItems": [
