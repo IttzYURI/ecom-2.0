@@ -1,6 +1,8 @@
 import Link from "next/link";
+import type { Route } from "next";
 import type { ReactNode } from "react";
 
+import { MobileSiteNav } from "../components/mobile-site-nav";
 import { SiteBanner } from "../components/site-banner";
 import { getCustomerSessionFromCookieStore } from "../lib/customer-auth";
 
@@ -15,6 +17,8 @@ export const dynamic = "force-dynamic";
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const customerSession = await getCustomerSessionFromCookieStore();
+  const accountHref: Route = customerSession ? "/account" : "/login";
+  const accountLabel = customerSession?.name || (customerSession ? "Account" : "Login");
 
   return (
     <html lang="en">
@@ -51,6 +55,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                 </Link>
               )}
             </div>
+            <MobileSiteNav accountHref={accountHref} accountLabel={accountLabel} />
           </div>
         </header>
         {children}

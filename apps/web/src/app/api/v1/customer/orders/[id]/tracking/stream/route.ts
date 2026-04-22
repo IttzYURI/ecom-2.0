@@ -1,0 +1,52 @@
+import { NextRequest } from "next/server";
+
+import { getDefaultTenant } from "../../../../../../../../lib/mock-data";
+import { getStoredCustomerOrderTracking } from "../../../../../../../../lib/operations-store";
+import { serializeOrderTracking } from "../../../../../../../../lib/tracking-view";
+import { getCustomerSession } from "../../../../../../../../lib/customer-auth";
+
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  const session = await getCustomerSession(request);
+
+  if (!session) {
+    return new Response("Unauthorized", { status: 401 });
+  }
+
+  const { id } = await context.params;
+  const tenantId = request.nextUrl.searchParams.get("tenantId")?.trim() || getDefaultTenant().id;
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      const encoder = new TextEncoder();
+      const send = async () => {
+        const order = await getStoredCustomerOrderTracking(tenantId, session.email, id);
+
+        if (!order) {
+          controller.enqueue(encoder.encode(`event: error\ndata: ${JSON.stringify({ message: "Tracking unavailable" })}\n\n`));
+          return;
+        }
+
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(serializeOrderTracking(order))}\n\n`));
+      };
+
+      await send();
+      const intervalId = setInterval(send, 15000);
+
+      request.signal.addEventListener("abort", () => {
+        clearInterval(intervalId);
+        controller.close();
+      });
+    }
+  });
+
+  return new Response(stream, {
+    headers: {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive"
+    }
+  });
+}

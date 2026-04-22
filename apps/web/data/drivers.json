@@ -1,0 +1,28 @@
+{
+  "tenant_bella": [
+    {
+      "id": "driver_1",
+      "tenantId": "tenant_bella",
+      "name": "Marco Bell",
+      "phone": "+44 7700 900301",
+      "active": true,
+      "vehicleLabel": "Red scooter"
+    },
+    {
+      "id": "driver_2",
+      "tenantId": "tenant_bella",
+      "name": "Nina Cole",
+      "phone": "+44 7700 900302",
+      "active": true,
+      "vehicleLabel": "Black hatchback"
+    },
+    {
+      "id": "driver_3",
+      "tenantId": "tenant_bella",
+      "name": "Omar Shah",
+      "phone": "+44 7700 900303",
+      "active": false,
+      "vehicleLabel": "Silver bicycle"
+    }
+  ]
+}

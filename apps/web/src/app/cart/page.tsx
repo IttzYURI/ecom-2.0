@@ -13,6 +13,7 @@ export default async function CartRoute() {
       eyebrow="Your basket"
       title="Cart"
       subtitle="Review your selections before continuing to checkout."
+      showHero={false}
     >
       <CartPageContent bundle={bundle} />
     </LayoutShell>

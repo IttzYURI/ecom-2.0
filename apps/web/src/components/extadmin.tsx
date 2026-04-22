@@ -542,13 +542,13 @@ export function ExtAdminDashboard({ bundle }: { bundle: TenantBundle }) {
               <tbody>
                 {recentOrders.map((order) => (
                   <tr key={order.id}>
-                    <td>
+                    <td data-label="Order">
                       <strong>{order.orderNumber || order.id.slice(0, 8)}</strong>
                     </td>
-                    <td>{toTitleCase(order.fulfillmentType || "online")}</td>
-                    <td>{formatMoney(order.total || 0)}</td>
-                    <td>{order.customerName}</td>
-                    <td>
+                    <td data-label="Type">{toTitleCase(order.fulfillmentType || "online")}</td>
+                    <td data-label="Amount">{formatMoney(order.total || 0)}</td>
+                    <td data-label="Customer">{order.customerName}</td>
+                    <td data-label="Status">
                       <span className={`admin-badge ${getOrderTone(order.orderStatus)}`}>
                         {toTitleCase(order.orderStatus)}
                       </span>
@@ -969,13 +969,139 @@ export function ExtAdminMenuPage({
 }
 
 export function ExtAdminOrdersPage({ bundle }: { bundle: TenantBundle }) {
+  const deliveryOrders = bundle.orders.filter((order) => order.fulfillmentType === "delivery");
+
   return (
     <section className="admin-page-stack">
+      <article className="admin-surface-card">
+        <AdminSectionHeader
+          eyebrow="Dispatch"
+          title="Delivery board"
+          description="Manage delivery-specific stages, assign drivers manually, and keep customer tracking updated."
+        />
+        <div className="admin-panel-grid">
+          {deliveryOrders.map((order) => (
+            <section key={order.id} className="admin-subcard delivery-dispatch-card">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">Delivery order</p>
+                  <h3>{order.orderNumber}</h3>
+                  <p>{order.customerName} | {formatMoney(order.total)}</p>
+                </div>
+                {order.deliveryTracking ? (
+                  <Link href={`/track/${order.deliveryTracking.trackingToken}`} className="button-ghost compact-button">
+                    Open tracking link
+                  </Link>
+                ) : null}
+              </div>
+
+              <div className="admin-field-grid compact">
+                <div>
+                  <p className="eyebrow">Kitchen stage</p>
+                  <form method="post" action="/api/v1/extadmin/orders/status" className="form-grid admin-form-stack">
+                    <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+                    <input type="hidden" name="orderId" value={order.id} />
+                    <select name="orderStatus" defaultValue={order.orderStatus}>
+                      <option value="pending_payment">Pending payment</option>
+                      <option value="placed">Placed</option>
+                      <option value="accepted">Accepted</option>
+                      <option value="preparing">Preparing</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                      <option value="refunded">Refunded</option>
+                    </select>
+                    <button type="submit" className="button-ghost compact-button">Save kitchen stage</button>
+                  </form>
+                </div>
+
+                <div>
+                  <p className="eyebrow">Assign driver</p>
+                  <form method="post" action="/api/v1/extadmin/orders/assign-driver" className="form-grid admin-form-stack">
+                    <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+                    <input type="hidden" name="orderId" value={order.id} />
+                    <select name="driverId" defaultValue={order.deliveryTracking?.assignedDriverId ?? ""}>
+                      <option value="">Unassigned</option>
+                      {bundle.drivers.map((driver) => (
+                        <option key={driver.id} value={driver.id}>
+                          {driver.name} | {driver.vehicleLabel} {driver.active ? "" : "(Inactive)"}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      name="etaMinutes"
+                      type="number"
+                      min="5"
+                      max="180"
+                      placeholder="ETA in minutes"
+                    />
+                    <button type="submit" className="button-ghost compact-button">Save driver</button>
+                  </form>
+                </div>
+
+                <div>
+                  <p className="eyebrow">Dispatch milestone</p>
+                  <form method="post" action="/api/v1/extadmin/orders/delivery-status" className="form-grid admin-form-stack">
+                    <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+                    <input type="hidden" name="orderId" value={order.id} />
+                    <select
+                      name="deliveryStatus"
+                      defaultValue={order.deliveryTracking?.deliveryStatus ?? "awaiting_dispatch"}
+                    >
+                      <option value="awaiting_dispatch">Awaiting dispatch</option>
+                      <option value="driver_assigned">Driver assigned</option>
+                      <option value="out_for_delivery">Out for delivery</option>
+                      <option value="arriving">Arriving</option>
+                      <option value="delivered">Delivered</option>
+                      <option value="delivery_failed">Delivery failed</option>
+                    </select>
+                    <input
+                      name="etaMinutes"
+                      type="number"
+                      min="5"
+                      max="180"
+                      placeholder="Refresh ETA in minutes"
+                    />
+                    <button type="submit" className="button-primary admin-submit-button">Update dispatch</button>
+                  </form>
+                </div>
+              </div>
+
+              <div className="admin-breakdown-list">
+                <div className="admin-breakdown-row">
+                  <strong>Tracking stage</strong>
+                  <span>{order.deliveryTracking ? toTitleCase(order.deliveryTracking.deliveryStatus) : "Not started"}</span>
+                </div>
+                <div className="admin-breakdown-row">
+                  <strong>Assigned driver</strong>
+                  <span>{order.deliveryTracking?.assignedDriverName ?? "None"}</span>
+                </div>
+                <div className="admin-breakdown-row">
+                  <strong>ETA</strong>
+                  <span>
+                    {order.deliveryTracking?.estimatedDeliveredAt
+                      ? new Date(order.deliveryTracking.estimatedDeliveredAt).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit"
+                        })
+                      : "Pending"}
+                  </span>
+                </div>
+                <div className="admin-breakdown-row">
+                  <strong>Address</strong>
+                  <span>{order.address || "Missing delivery address"}</span>
+                </div>
+              </div>
+            </section>
+          ))}
+          {!deliveryOrders.length ? <div className="admin-empty-card">No delivery orders waiting for dispatch.</div> : null}
+        </div>
+      </article>
+
       <article className="admin-surface-card admin-table-card">
         <AdminSectionHeader
           eyebrow="Service"
-          title="Order queue"
-          description="Track active orders, keep statuses current, and reduce front-of-house surprises."
+          title="Full order queue"
+          description="Keep kitchen and payment statuses aligned for every order type."
         />
         <div className="admin-table-wrap">
           <table className="admin-table">
@@ -991,10 +1117,10 @@ export function ExtAdminOrdersPage({ bundle }: { bundle: TenantBundle }) {
             <tbody>
               {bundle.orders.map((order) => (
                 <tr key={order.id}>
-                  <td>{order.orderNumber}</td>
-                  <td>{order.customerName}</td>
-                  <td>{toTitleCase(order.fulfillmentType || "online")}</td>
-                  <td>
+                  <td data-label="Order">{order.orderNumber}</td>
+                  <td data-label="Customer">{order.customerName}</td>
+                  <td data-label="Fulfilment">{toTitleCase(order.fulfillmentType || "online")}</td>
+                  <td data-label="Status">
                     <form method="post" action="/api/v1/extadmin/orders/status" className="inline-status-form admin-inline-form">
                       <input type="hidden" name="tenantId" value={bundle.tenant.id} />
                       <input type="hidden" name="orderId" value={order.id} />
@@ -1012,7 +1138,7 @@ export function ExtAdminOrdersPage({ bundle }: { bundle: TenantBundle }) {
                       </button>
                     </form>
                   </td>
-                  <td>{formatMoney(order.total)}</td>
+                  <td data-label="Total">{formatMoney(order.total)}</td>
                 </tr>
               ))}
               {!bundle.orders.length ? <EmptyRow colSpan={5} label="No orders yet." /> : null}
@@ -1020,6 +1146,7 @@ export function ExtAdminOrdersPage({ bundle }: { bundle: TenantBundle }) {
           </table>
         </div>
       </article>
+
     </section>
   );
 }
@@ -1047,11 +1174,11 @@ export function ExtAdminBookingsPage({ bundle }: { bundle: TenantBundle }) {
             <tbody>
               {bundle.bookings.map((booking) => (
                 <tr key={booking.id}>
-                  <td>{booking.customerName}</td>
-                  <td>{booking.bookingDate}</td>
-                  <td>{booking.bookingTime}</td>
-                  <td>{booking.partySize}</td>
-                  <td>
+                  <td data-label="Guest">{booking.customerName}</td>
+                  <td data-label="Date">{booking.bookingDate}</td>
+                  <td data-label="Time">{booking.bookingTime}</td>
+                  <td data-label="Party">{booking.partySize}</td>
+                  <td data-label="Status">
                     <form method="post" action="/api/v1/extadmin/bookings/status" className="inline-status-form admin-inline-form">
                       <input type="hidden" name="tenantId" value={bundle.tenant.id} />
                       <input type="hidden" name="bookingId" value={booking.id} />

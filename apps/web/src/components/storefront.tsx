@@ -96,32 +96,36 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
 
   return (
     <div className="home-stack stack-xl">
-      <section className="hero-editorial">
+      <section className="hero-editorial storefront-hero">
         <div className="hero-editorial-copy">
-          <div className="hero-status">
-            <span className="hero-status-dot" aria-hidden="true" />
-            <span>Open now</span>
+          <div className="storefront-hero-headline">
+            <div className="hero-status">
+              <span className="hero-status-dot" aria-hidden="true" />
+              <span>Open now</span>
+            </div>
+            <p className="eyebrow">Contemporary Italian dining</p>
+            <h1>
+              Savor every
+              <br />
+              moment with
+              <br />
+              <span>every bite</span>
+            </h1>
           </div>
-          <p className="eyebrow">Contemporary Italian dining</p>
-          <h1>
-            Savor every
-            <br />
-            moment with
-            <br />
-            <span>every bite</span>
-          </h1>
-          <p className="hero-lead">
-            Bella Roma brings together warm hospitality, elegant plating, and direct
-            online ordering for guests who want the restaurant experience before the
-            first bite arrives.
-          </p>
-          <div className="actions">
-            <Link href="/booking" className="button-ghost">
-              Reserve your table
-            </Link>
-            <Link href="/menu" className="button-primary">
-              Order Now
-            </Link>
+          <div className="storefront-hero-support">
+            <p className="hero-lead">
+              Bella Roma brings together warm hospitality, elegant plating, and direct
+              online ordering for guests who want the restaurant experience before the
+              first bite arrives.
+            </p>
+            <div className="actions">
+              <Link href="/booking" className="button-ghost">
+                Reserve your table
+              </Link>
+              <Link href="/menu" className="button-primary">
+                Order Now
+              </Link>
+            </div>
           </div>
           <div className="hero-feature-list">
             <article>
@@ -155,7 +159,7 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
         </div>
       </section>
 
-      <section className="stat-band stat-band-premium">
+      <section className="stat-band stat-band-premium storefront-stat-band">
         <article>
           <strong>30-45 min</strong>
           <span>Delivery estimate</span>
@@ -175,7 +179,7 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
       </section>
 
       <section>
-        <article className="panel tone-warm story-intro">
+        <article className="panel tone-warm story-intro storefront-story-intro">
           <p className="eyebrow">Culinary artistry</p>
           <h2>Indulgent plates with a quieter sense of luxury</h2>
           <p>
@@ -185,7 +189,7 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
         </article>
       </section>
 
-      <section className="trio-showcase">
+      <section className="trio-showcase storefront-showcase">
         {featured.map((item) => (
           <article key={item.id} className="showcase-dish">
             <div className="showcase-dish-media">
@@ -203,7 +207,7 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
         ))}
       </section>
 
-      <section className="panel feature-panel">
+      <section className="panel feature-panel storefront-feature-panel">
         <div className="section-heading feature-heading">
           <div>
             <p className="eyebrow">Featured dishes</p>
@@ -220,7 +224,7 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
         </div>
       </section>
 
-      <section className="chef-section chef-section-premium">
+      <section className="chef-section chef-section-premium storefront-chef-section">
         <article className="panel tone-dark chef-story">
           <p className="eyebrow">Crafted by experts</p>
           <h2>A kitchen team focused on consistency, elegance, and flavor</h2>
@@ -240,7 +244,7 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
         </div>
       </section>
 
-      <section className="testimonial-reservation-grid">
+      <section className="testimonial-reservation-grid storefront-social-proof">
         <article className="panel testimonial-column">
           <p className="eyebrow">Praise from our patrons</p>
           <h2>Guests remember the mood as much as the meal</h2>
@@ -277,9 +281,9 @@ export function MenuPage({ bundle }: { bundle: TenantBundle }) {
     bundle.menuItems.some((item) => item.categoryIds.includes(category.id))
   );
   return (
-    <div className="menu-page stack-xl">
+    <div className="menu-page stack-xl mobile-menu-page">
       <FloatingCartButton menuItems={bundle.menuItems} />
-      <section className="menu-hero">
+      <section className="menu-hero mobile-menu-hero">
         <article className="panel tone-dark menu-hero-copy">
           <p className="eyebrow">Menu overview</p>
           <h2>Built for browsing quickly and ordering confidently</h2>
@@ -303,7 +307,7 @@ export function MenuPage({ bundle }: { bundle: TenantBundle }) {
         const items = bundle.menuItems.filter((item) => item.categoryIds.includes(category.id));
 
         return (
-          <article key={category.id} id={toSectionId(category.name)} className="menu-category-section">
+          <article key={category.id} id={toSectionId(category.name)} className="menu-category-section mobile-menu-section">
             <div className="section-heading menu-category-heading">
               <div>
                 <p className="eyebrow">Category</p>
@@ -338,11 +342,11 @@ export function GalleryPage({ bundle }: { bundle: TenantBundle }) {
     : fallbackGalleryImages;
   return (
     <section className="stack-xl">
-      <article className="panel tone-warm">
+      <article className="panel tone-warm gallery-intro-card">
         <p className="eyebrow">Gallery</p>
         <h2>The dining room, the kitchen energy, and the plates guests remember</h2>
       </article>
-      <div className="gallery-grid">
+      <div className="gallery-grid gallery-page-grid">
         {galleryImages.map((image) => (
           <ResponsiveImage key={image} src={image} alt="Restaurant gallery" sizes="(max-width: 768px) 100vw, 33vw" />
         ))}
@@ -353,8 +357,8 @@ export function GalleryPage({ bundle }: { bundle: TenantBundle }) {
 
 export function BookingPage({ tenantId }: { tenantId: string }) {
   return (
-    <div className="content-grid">
-      <section className="panel tone-dark">
+    <div className="content-grid booking-page-grid">
+      <section className="panel tone-dark booking-intro-card">
         <p className="eyebrow">Reservations</p>
         <h2>Book a table with the restaurant directly</h2>
         <p>
@@ -362,7 +366,7 @@ export function BookingPage({ tenantId }: { tenantId: string }) {
           reviews requests and confirms availability manually.
         </p>
       </section>
-      <section className="panel form-panel">
+      <section className="panel form-panel booking-form-card">
         <h2>Booking request</h2>
         <PublicBookingForm tenantId={tenantId} />
       </section>
@@ -373,14 +377,14 @@ export function BookingPage({ tenantId }: { tenantId: string }) {
 export function ReviewsPage({ bundle }: { bundle: TenantBundle }) {
   return (
     <section className="stack-xl">
-      <article className="panel tone-dark">
+      <article className="panel tone-dark reviews-intro-card">
         <p className="eyebrow">Guest reviews</p>
         <h2>Social proof that feels earned, not manufactured</h2>
       </article>
-      <div className="card-grid">
+      <div className="card-grid reviews-grid">
         {bundle.reviews.concat(bundle.reviews).map((review, index) => (
           <article key={`${review.id}-${index}`} className="panel review-card">
-            <span className="review-stars">★★★★★</span>
+            <span className="review-stars">{"\u2605\u2605\u2605\u2605\u2605"}</span>
             <h3>{review.author}</h3>
             <p>{review.content}</p>
           </article>
@@ -393,11 +397,11 @@ export function ReviewsPage({ bundle }: { bundle: TenantBundle }) {
 export function FaqPage({ bundle }: { bundle: TenantBundle }) {
   return (
     <section className="stack-xl">
-      <article className="panel tone-warm">
+      <article className="panel tone-warm faq-intro-card">
         <p className="eyebrow">FAQ</p>
         <h2>Questions guests usually ask before ordering</h2>
       </article>
-      <div className="stack">
+      <div className="stack faq-stack">
         {bundle.content.faq.map((entry) => (
           <article key={entry.question} className="panel faq-item">
             <h3>{entry.question}</h3>
@@ -411,8 +415,8 @@ export function FaqPage({ bundle }: { bundle: TenantBundle }) {
 
 export function ContactPage({ bundle }: { bundle: TenantBundle }) {
   return (
-    <div className="content-grid">
-      <article className="panel tone-dark">
+    <div className="content-grid contact-page-grid">
+      <article className="panel tone-dark contact-info-card">
         <p className="eyebrow">Contact</p>
         <h2>Visit, call, or message the team directly</h2>
         <div className="contact-list">
@@ -430,7 +434,7 @@ export function ContactPage({ bundle }: { bundle: TenantBundle }) {
           </div>
         </div>
       </article>
-      <article className="panel">
+      <article className="panel contact-form-card">
         <h2>Send an enquiry</h2>
         <PublicContactForm tenantId={bundle.tenant.id} />
       </article>
@@ -460,3 +464,4 @@ export function AuthPage({
     </div>
   );
 }
+

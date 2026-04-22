@@ -1,6 +1,7 @@
 import type {
   Booking,
   Category,
+  Driver,
   MenuItem,
   OptionGroup,
   Order,
@@ -313,6 +314,38 @@ const orders: Order[] = [
     total: 28.9,
     orderStatus: "accepted",
     paymentStatus: "paid",
+    deliveryTracking: {
+      trackingToken: "track_br_1058",
+      deliveryStatus: "driver_assigned",
+      estimatedReadyAt: "2026-04-17T19:30:00.000Z",
+      estimatedDeliveredAt: "2026-04-17T19:55:00.000Z",
+      assignedDriverId: "driver_1",
+      assignedDriverName: "Marco Bell",
+      trackingEvents: [
+        {
+          id: "tracking_1058_1",
+          type: "order_confirmed",
+          label: "Order Confirmed",
+          description: "The restaurant has received the delivery order.",
+          createdAt: "2026-04-17T19:10:00.000Z"
+        },
+        {
+          id: "tracking_1058_2",
+          type: "preparing",
+          label: "Preparing",
+          description: "The kitchen has started preparing the order.",
+          createdAt: "2026-04-17T19:16:00.000Z"
+        },
+        {
+          id: "tracking_1058_3",
+          type: "driver_assigned",
+          label: "Driver Assigned",
+          description: "Marco Bell has been assigned to this delivery.",
+          createdAt: "2026-04-17T19:24:00.000Z"
+        }
+      ],
+      lastUpdatedAt: "2026-04-17T19:24:00.000Z"
+    },
     createdAt: "2026-04-17T19:10:00.000Z"
   },
   {
@@ -338,6 +371,7 @@ const orders: Order[] = [
     total: 11.5,
     orderStatus: "cancelled",
     paymentStatus: "failed",
+    deliveryTracking: null,
     createdAt: "2026-04-15T18:20:00.000Z"
   },
   {
@@ -364,6 +398,68 @@ const orders: Order[] = [
     total: 27.3,
     orderStatus: "completed",
     paymentStatus: "paid",
+    deliveryTracking: {
+      trackingToken: "track_br_1047",
+      deliveryStatus: "delivered",
+      estimatedReadyAt: "2026-04-13T21:05:00.000Z",
+      estimatedDeliveredAt: "2026-04-13T21:30:00.000Z",
+      assignedDriverId: "driver_2",
+      assignedDriverName: "Nina Cole",
+      dispatchedAt: "2026-04-13T21:07:00.000Z",
+      pickedUpAt: "2026-04-13T21:07:00.000Z",
+      deliveredAt: "2026-04-13T21:31:00.000Z",
+      trackingEvents: [
+        {
+          id: "tracking_1047_1",
+          type: "order_confirmed",
+          label: "Order Confirmed",
+          description: "The restaurant has received the delivery order.",
+          createdAt: "2026-04-13T20:45:00.000Z"
+        },
+        {
+          id: "tracking_1047_2",
+          type: "preparing",
+          label: "Preparing",
+          description: "The kitchen has started preparing the order.",
+          createdAt: "2026-04-13T20:52:00.000Z"
+        },
+        {
+          id: "tracking_1047_3",
+          type: "ready_for_dispatch",
+          label: "Ready For Dispatch",
+          description: "The order is packed and ready to leave the restaurant.",
+          createdAt: "2026-04-13T21:05:00.000Z"
+        },
+        {
+          id: "tracking_1047_4",
+          type: "driver_assigned",
+          label: "Driver Assigned",
+          description: "Nina Cole has been assigned to this delivery.",
+          createdAt: "2026-04-13T21:06:00.000Z"
+        },
+        {
+          id: "tracking_1047_5",
+          type: "out_for_delivery",
+          label: "Out For Delivery",
+          description: "The order has left the restaurant.",
+          createdAt: "2026-04-13T21:07:00.000Z"
+        },
+        {
+          id: "tracking_1047_6",
+          type: "delivered",
+          label: "Delivered",
+          description: "The order has been delivered.",
+          createdAt: "2026-04-13T21:31:00.000Z"
+        }
+      ],
+      lastKnownLocation: {
+        lat: 51.523,
+        lng: -0.158,
+        capturedAt: "2026-04-13T21:20:00.000Z",
+        accuracyMeters: 80
+      },
+      lastUpdatedAt: "2026-04-13T21:31:00.000Z"
+    },
     createdAt: "2026-04-13T20:45:00.000Z"
   },
   {
@@ -395,7 +491,57 @@ const orders: Order[] = [
     total: 32.5,
     orderStatus: "refunded",
     paymentStatus: "refunded",
+    deliveryTracking: {
+      trackingToken: "track_br_1042",
+      deliveryStatus: "delivery_failed",
+      estimatedReadyAt: "2026-04-11T10:50:00.000Z",
+      estimatedDeliveredAt: "2026-04-11T11:15:00.000Z",
+      trackingEvents: [
+        {
+          id: "tracking_1042_1",
+          type: "order_confirmed",
+          label: "Order Confirmed",
+          description: "The restaurant has received the delivery order.",
+          createdAt: "2026-04-11T10:30:00.000Z"
+        },
+        {
+          id: "tracking_1042_2",
+          type: "delivery_failed",
+          label: "Delivery Failed",
+          description: "The delivery could not be completed.",
+          createdAt: "2026-04-11T11:02:00.000Z"
+        }
+      ],
+      lastUpdatedAt: "2026-04-11T11:02:00.000Z"
+    },
     createdAt: "2026-04-11T10:30:00.000Z"
+  }
+];
+
+const drivers: Driver[] = [
+  {
+    id: "driver_1",
+    tenantId: "tenant_bella",
+    name: "Marco Bell",
+    phone: "+44 7700 900301",
+    active: true,
+    vehicleLabel: "Red scooter"
+  },
+  {
+    id: "driver_2",
+    tenantId: "tenant_bella",
+    name: "Nina Cole",
+    phone: "+44 7700 900302",
+    active: true,
+    vehicleLabel: "Black hatchback"
+  },
+  {
+    id: "driver_3",
+    tenantId: "tenant_bella",
+    name: "Omar Shah",
+    phone: "+44 7700 900303",
+    active: false,
+    vehicleLabel: "Silver bicycle"
   }
 ];
 
@@ -497,6 +643,7 @@ export function getTenantBundle(
     reviews: reviews.filter((entry) => entry.tenantId === tenantId),
     bookings: bookings.filter((entry) => entry.tenantId === tenantId),
     orders: orders.filter((entry) => entry.tenantId === tenantId),
+    drivers: drivers.filter((entry) => entry.tenantId === tenantId),
     roles: roles.filter((entry) => entry.tenantId === tenantId),
     staff: staff.filter((entry) => entry.tenantId === tenantId)
   };
@@ -528,4 +675,10 @@ export function getDefaultStaff(tenantId: string): StaffMember[] {
   return JSON.parse(
     JSON.stringify(staff.filter((entry) => entry.tenantId === tenantId))
   ) as StaffMember[];
+}
+
+export function getDefaultDrivers(tenantId: string): Driver[] {
+  return JSON.parse(
+    JSON.stringify(drivers.filter((entry) => entry.tenantId === tenantId))
+  ) as Driver[];
 }

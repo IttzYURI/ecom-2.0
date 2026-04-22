@@ -11,6 +11,8 @@ export default async function CheckoutSuccessPage({
   const orderNumber = Array.isArray(params.orderNumber) ? params.orderNumber[0] : params.orderNumber;
   const paymentMethod = Array.isArray(params.paymentMethod) ? params.paymentMethod[0] : params.paymentMethod;
   const total = Array.isArray(params.total) ? params.total[0] : params.total;
+  const trackingToken = Array.isArray(params.trackingToken) ? params.trackingToken[0] : params.trackingToken;
+  const fulfillmentType = Array.isArray(params.fulfillmentType) ? params.fulfillmentType[0] : params.fulfillmentType;
 
   return (
     <LayoutShell
@@ -23,7 +25,7 @@ export default async function CheckoutSuccessPage({
         <div className="panel tone-dark checkout-success-card">
           <div className="checkout-success-badge">
             <span className="checkout-success-mark" aria-hidden="true">
-              ✓
+              {"\u2713"}
             </span>
             <span>{paymentMethod === "card" ? "Card payment complete" : "Cash order received"}</span>
           </div>
@@ -37,7 +39,7 @@ export default async function CheckoutSuccessPage({
           {orderNumber || total ? (
             <p>
               {orderNumber ? `Order ${orderNumber}` : null}
-              {orderNumber && total ? " · " : null}
+              {orderNumber && total ? ` ${"\u00b7"} ` : null}
               {total ? `Total ${total}` : null}
             </p>
           ) : null}
@@ -45,12 +47,19 @@ export default async function CheckoutSuccessPage({
             <Link href="/menu" className="button-primary">
               Back to menu
             </Link>
-            <Link href="/account/track-orders" className="button-secondary">
-              Track orders
-            </Link>
+            {fulfillmentType === "delivery" && trackingToken ? (
+              <Link href={`/track/${trackingToken}`} className="button-secondary">
+                Track delivery
+              </Link>
+            ) : (
+              <Link href="/account/track-orders" className="button-secondary">
+                Track orders
+              </Link>
+            )}
           </div>
         </div>
       </section>
     </LayoutShell>
   );
 }
+

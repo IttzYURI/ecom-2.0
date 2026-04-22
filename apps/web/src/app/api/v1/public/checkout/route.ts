@@ -8,6 +8,7 @@ import { getStoredTenantSettings } from "../../../../../lib/settings-store";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
+  const appOrigin = request.nextUrl.origin;
   const tenantId = body.tenantId ?? "tenant_bella";
   const menu = await getStoredMenuContent(tenantId);
   const tenant = await getStoredTenantSettings(tenantId);
@@ -72,6 +73,10 @@ export async function POST(request: NextRequest) {
   });
 
   const orderEmailRecipients = extAdminUsers.filter((user) => user.orderEmailsEnabled);
+  const trackingLink =
+    order.fulfillmentType === "delivery" && order.deliveryTracking
+      ? `${appOrigin}/track/${order.deliveryTracking.trackingToken}`
+      : null;
 
   for (const recipient of orderEmailRecipients) {
     await sendEmailNotification({
@@ -83,7 +88,21 @@ export async function POST(request: NextRequest) {
         `Order number: ${order.orderNumber}`,
         `Total: ${order.total.toFixed(2)}`,
         `Customer email: ${order.customerEmail}`,
-        `Customer phone: ${order.customerPhone || "Not provided"}`
+        `Customer phone: ${order.customerPhone || "Not provided"}`,
+        trackingLink ? `Tracking link: ${trackingLink}` : null
+      ].join("\n")
+    });
+  }
+
+  if (trackingLink && order.customerEmail) {
+    await sendEmailNotification({
+      tenantId,
+      to: order.customerEmail,
+      subject: `[${tenant.name}] Track your delivery order ${order.orderNumber}`,
+      text: [
+        `Thanks for ordering from ${tenant.name}.`,
+        `Order number: ${order.orderNumber}`,
+        `Track delivery: ${trackingLink}`
       ].join("\n")
     });
   }
@@ -95,7 +114,10 @@ export async function POST(request: NextRequest) {
         orderId: order.id,
         orderNumber: order.orderNumber,
         status: order.orderStatus,
-        total: order.total
+        total: order.total,
+        fulfillmentType: order.fulfillmentType,
+        trackingToken: order.deliveryTracking?.trackingToken ?? null,
+        trackingLink
       },
       meta: {},
       error: null

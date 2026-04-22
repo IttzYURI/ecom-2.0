@@ -20,6 +20,41 @@ type CustomerDashboardProps = {
 };
 
 function getOrderProgress(order: Order) {
+  if (order.fulfillmentType === "delivery" && order.deliveryTracking) {
+    const stageFloor: Record<NonNullable<Order["deliveryTracking"]>["deliveryStatus"], number> = {
+      awaiting_dispatch: 0.24,
+      driver_assigned: 0.45,
+      out_for_delivery: 0.72,
+      arriving: 0.9,
+      delivered: 1,
+      delivery_failed: 1
+    };
+    const activeStage =
+      order.deliveryTracking.deliveryStatus === "awaiting_dispatch"
+        ? "Awaiting dispatch"
+        : order.deliveryTracking.deliveryStatus === "driver_assigned"
+          ? "Driver assigned"
+          : order.deliveryTracking.deliveryStatus === "out_for_delivery"
+            ? "Out for delivery"
+            : order.deliveryTracking.deliveryStatus === "arriving"
+              ? "Arriving soon"
+              : order.deliveryTracking.deliveryStatus === "delivered"
+                ? "Delivered"
+                : "Delivery issue";
+    const remainingMinutes = order.deliveryTracking.estimatedDeliveredAt
+      ? Math.max(
+          Math.round((new Date(order.deliveryTracking.estimatedDeliveredAt).getTime() - Date.now()) / 60000),
+          0
+        )
+      : 0;
+
+    return {
+      progress: stageFloor[order.deliveryTracking.deliveryStatus],
+      remainingMinutes,
+      activeStage
+    };
+  }
+
   const elapsedMinutes = Math.max(
     (Date.now() - new Date(order.createdAt).getTime()) / 60000,
     0
@@ -148,7 +183,7 @@ export function CustomerDashboardPage({
             {recentOrders[0] ? (
               <div>
                 <span>Most recent order</span>
-                <strong>{recentOrders[0].orderNumber} · {formatMoney(recentOrders[0].total)}</strong>
+                <strong>{recentOrders[0].orderNumber} {"\u00b7"} {formatMoney(recentOrders[0].total)}</strong>
               </div>
             ) : null}
           </div>
@@ -189,3 +224,4 @@ export function CustomerDashboardPage({
     </div>
   );
 }
+

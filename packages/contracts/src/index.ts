@@ -8,8 +8,26 @@ export type OrderStatus =
   | "completed"
   | "cancelled"
   | "refunded";
+export type DeliveryStatus =
+  | "awaiting_dispatch"
+  | "driver_assigned"
+  | "out_for_delivery"
+  | "arriving"
+  | "delivered"
+  | "delivery_failed";
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 export type BookingStatus = "pending" | "accepted" | "rejected" | "cancelled";
+export type DeliveryTrackingEventType =
+  | "order_confirmed"
+  | "preparing"
+  | "ready_for_dispatch"
+  | "driver_assigned"
+  | "driver_unassigned"
+  | "out_for_delivery"
+  | "arriving"
+  | "eta_updated"
+  | "delivered"
+  | "delivery_failed";
 
 export interface TenantBranding {
   primaryColor: string;
@@ -120,6 +138,36 @@ export interface OrderLine {
   note?: string;
 }
 
+export interface DriverLocationSnapshot {
+  lat: number;
+  lng: number;
+  capturedAt: string;
+  accuracyMeters: number;
+}
+
+export interface DeliveryTrackingEvent {
+  id: string;
+  type: DeliveryTrackingEventType;
+  label: string;
+  description?: string;
+  createdAt: string;
+}
+
+export interface DeliveryTracking {
+  trackingToken: string;
+  deliveryStatus: DeliveryStatus;
+  estimatedReadyAt?: string;
+  estimatedDeliveredAt?: string;
+  assignedDriverId?: string;
+  assignedDriverName?: string;
+  dispatchedAt?: string;
+  pickedUpAt?: string;
+  deliveredAt?: string;
+  lastKnownLocation?: DriverLocationSnapshot;
+  trackingEvents: DeliveryTrackingEvent[];
+  lastUpdatedAt: string;
+}
+
 export interface Order {
   id: string;
   tenantId: string;
@@ -136,6 +184,7 @@ export interface Order {
   total: number;
   orderStatus: OrderStatus;
   paymentStatus: PaymentStatus;
+  deliveryTracking?: DeliveryTracking | null;
   createdAt: string;
 }
 
@@ -153,6 +202,15 @@ export interface StaffMember {
   email: string;
   roleIds: string[];
   orderEmailsEnabled: boolean;
+}
+
+export interface Driver {
+  id: string;
+  tenantId: string;
+  name: string;
+  phone: string;
+  active: boolean;
+  vehicleLabel: string;
 }
 
 export interface PlatformMetric {
@@ -178,6 +236,7 @@ export interface TenantBundle {
   reviews: Review[];
   bookings: Booking[];
   orders: Order[];
+  drivers: Driver[];
   roles: Role[];
   staff: StaffMember[];
 }

@@ -97,13 +97,26 @@ function getItemQuantity(menuItemId: string) {
 
 export function setItemQuantity(menuItemId: string, quantity: number) {
   const items = readCart();
-  const remainingItems = items.filter((item) => item.menuItemId !== menuItemId);
+  const existingIndex = items.findIndex((item) => item.menuItemId === menuItemId);
 
-  if (quantity > 0) {
-    remainingItems.push({ menuItemId, quantity });
+  if (existingIndex === -1) {
+    if (quantity > 0) {
+      writeCart([...items, { menuItemId, quantity }]);
+      return;
+    }
+
+    writeCart(items);
+    return;
   }
 
-  writeCart(remainingItems);
+  if (quantity > 0) {
+    const nextItems = items.slice();
+    nextItems[existingIndex] = { menuItemId, quantity };
+    writeCart(nextItems);
+    return;
+  }
+
+  writeCart(items.filter((item) => item.menuItemId !== menuItemId));
 }
 
 function getCartCount(items: StoredCartItem[]) {
@@ -223,6 +236,7 @@ export function CartPageClient({ menuItems }: { menuItems: MenuItem[] }) {
     readCheckoutPreferences().fulfillmentType
   );
   const [deliveryAddress, setDeliveryAddress] = useState(readCheckoutPreferences().deliveryAddress);
+  const [expandedItemId, setExpandedItemId] = useState<string | null>(null);
 
   useEffect(() => {
     function syncCart() {
@@ -244,6 +258,16 @@ export function CartPageClient({ menuItems }: { menuItems: MenuItem[] }) {
   const delivery = lines.length ? 3.5 : 0;
 
   useEffect(() => {
+    if (!expandedItemId) {
+      return;
+    }
+
+    if (!lines.some((line) => line.item.id === expandedItemId)) {
+      setExpandedItemId(null);
+    }
+  }, [expandedItemId, lines]);
+
+  useEffect(() => {
     writeCheckoutPreferences({
       fulfillmentType,
       deliveryAddress
@@ -256,29 +280,72 @@ export function CartPageClient({ menuItems }: { menuItems: MenuItem[] }) {
         <p className="eyebrow">Your order</p>
         <div className="cart-review-header">
           <h2>Cart review</h2>
-          <Link href="/menu" className="button-ghost compact-button">
-            Add more item
-          </Link>
+          <div className="cart-review-actions">
+            <Link href="/menu" className="button-ghost compact-button">
+              Add more item
+            </Link>
+            <button
+              type="button"
+              className="button-ghost compact-button cart-clear-button"
+              onClick={() => writeCart([])}
+              disabled={!lines.length}
+            >
+              Clear cart
+            </button>
+          </div>
         </div>
         {lines.length ? (
           <div className="cart-lines">
             {lines.map(({ item, quantity }) => (
-              <article key={item.id} className="cart-line">
+              <article
+                key={item.id}
+                className={`cart-line${expandedItemId === item.id ? " is-expanded" : ""}`}
+                onClick={() => setExpandedItemId((current) => (current === item.id ? null : item.id))}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setExpandedItemId((current) => (current === item.id ? null : item.id));
+                  }
+                }}
+              >
                 <Image src={item.image} alt={item.name} width={320} height={220} sizes="160px" />
                 <div className="cart-line-copy">
-                  <strong>{item.name}</strong>
+                  <strong>{quantity}x {item.name}</strong>
                   <p>{item.description}</p>
-                  <div className="menu-order-quantity cart-line-quantity" aria-label="Selected quantity">
-                    <button type="button" onClick={() => setItemQuantity(item.id, quantity - 1)} aria-label="Decrease quantity">
-                      -
-                    </button>
-                    <span>{quantity}</span>
-                    <button type="button" onClick={() => setItemQuantity(item.id, quantity + 1)} aria-label="Increase quantity">
-                      +
+                </div>
+                <strong>{formatMoney(item.basePrice * quantity)}</strong>
+                <div className="cart-line-editor">
+                  <div className="cart-line-editor-actions" onClick={(event) => event.stopPropagation()}>
+                    <div
+                      className="menu-order-quantity cart-line-quantity"
+                      aria-label={`Selected quantity for ${item.name}`}
+                    >
+                      <button type="button" onClick={() => setItemQuantity(item.id, quantity - 1)} aria-label="Decrease quantity">
+                        -
+                      </button>
+                      <span>{quantity}</span>
+                      <button type="button" onClick={() => setItemQuantity(item.id, quantity + 1)} aria-label="Increase quantity">
+                        +
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      className="button-ghost compact-button cart-line-delete"
+                      aria-label={`Remove ${item.name} from cart`}
+                      onClick={() => setItemQuantity(item.id, 0)}
+                    >
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M9 3.75h6" />
+                        <path d="M4.5 6.75h15" />
+                        <path d="M7.5 6.75v11.5a1.25 1.25 0 0 0 1.25 1.25h6.5a1.25 1.25 0 0 0 1.25-1.25V6.75" />
+                        <path d="M10 10.25v5.5" />
+                        <path d="M14 10.25v5.5" />
+                      </svg>
                     </button>
                   </div>
                 </div>
-                <strong>{formatMoney(item.basePrice * quantity)}</strong>
               </article>
             ))}
           </div>
@@ -575,6 +642,10 @@ export function CheckoutPageClient({
                     checkoutResult.data.orderNumber
                   )}&paymentMethod=${paymentMethod}&total=${encodeURIComponent(
                     String(checkoutResult.data.total)
+                  )}&fulfillmentType=${encodeURIComponent(
+                    String(checkoutResult.data.fulfillmentType)
+                  )}&trackingToken=${encodeURIComponent(
+                    String(checkoutResult.data.trackingToken ?? "")
                   )}`
                 );
               } catch (error) {
