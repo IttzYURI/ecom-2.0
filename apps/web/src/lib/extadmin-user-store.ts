@@ -14,6 +14,7 @@ export type ExtAdminUserRecord = {
   passwordHash: string;
   roleIds: string[];
   name: string;
+  orderEmailsEnabled: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -37,13 +38,22 @@ function getSeedOwnerDefaults() {
   };
 }
 
+function normalizeOrderEmailsEnabled(user: Pick<ExtAdminUserRecord, "roleIds"> & { orderEmailsEnabled?: boolean }) {
+  if (typeof user.orderEmailsEnabled === "boolean") {
+    return user.orderEmailsEnabled;
+  }
+
+  return user.roleIds.includes("role_owner");
+}
+
 function mapUserToStaffMember(user: ExtAdminUserRecord): StaffMember {
   return {
     id: user.id,
     tenantId: user.tenantId,
     name: user.name,
     email: user.email,
-    roleIds: user.roleIds
+    roleIds: user.roleIds,
+    orderEmailsEnabled: normalizeOrderEmailsEnabled(user)
   };
 }
 
@@ -58,6 +68,7 @@ async function buildSeedUsers(tenantId: string) {
       passwordHash: await hashPassword(owner.password),
       roleIds: owner.roleIds,
       name: owner.name,
+      orderEmailsEnabled: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
@@ -75,6 +86,7 @@ async function buildSeedUsers(tenantId: string) {
       passwordHash: await hashPassword("staff1234"),
       roleIds: member.roleIds,
       name: member.name,
+      orderEmailsEnabled: member.orderEmailsEnabled ?? false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     });
@@ -135,11 +147,18 @@ export async function getStoredExtAdminUsers(tenantId: string) {
   if (isMongoConfigured()) {
     await ensureDefaultExtAdminUsers();
     const collection = await getUsersCollection();
-    return collection.find({ tenantId }).sort({ createdAt: 1 }).toArray();
+    const users = await collection.find({ tenantId }).sort({ createdAt: 1 }).toArray();
+    return users.map((user) => ({
+      ...user,
+      orderEmailsEnabled: normalizeOrderEmailsEnabled(user)
+    }));
   }
 
   const store = await readUsersStore();
-  return store[tenantId] ?? (await buildSeedUsers(tenantId));
+  return (store[tenantId] ?? (await buildSeedUsers(tenantId))).map((user) => ({
+    ...user,
+    orderEmailsEnabled: normalizeOrderEmailsEnabled(user)
+  }));
 }
 
 export async function findStoredExtAdminUserByEmail(tenantId: string, email: string) {
@@ -176,6 +195,7 @@ export async function createStoredExtAdminUser(
     passwordHash: await hashPassword(input.password),
     roleIds: input.roleIds,
     name: input.name.trim(),
+    orderEmailsEnabled: false,
     createdAt: now,
     updatedAt: now
   };
@@ -259,6 +279,30 @@ export async function updateStoredExtAdminUserRole(
   const current = store[tenantId] ?? [];
   store[tenantId] = current.map((user) =>
     user.id === userId ? { ...user, roleIds: [roleId], updatedAt } : user
+  );
+  await writeUsersStore(store);
+}
+
+export async function updateStoredExtAdminUserOrderEmails(
+  tenantId: string,
+  userId: string,
+  orderEmailsEnabled: boolean
+) {
+  const updatedAt = new Date().toISOString();
+
+  if (isMongoConfigured()) {
+    const collection = await getUsersCollection();
+    await collection.updateOne(
+      { tenantId, id: userId },
+      { $set: { orderEmailsEnabled, updatedAt } }
+    );
+    return;
+  }
+
+  const store = await readUsersStore();
+  const current = store[tenantId] ?? [];
+  store[tenantId] = current.map((user) =>
+    user.id === userId ? { ...user, orderEmailsEnabled, updatedAt } : user
   );
   await writeUsersStore(store);
 }

@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { getStoredExtAdminUsers } from "../../../../../lib/extadmin-user-store";
 import { getStoredMenuContent } from "../../../../../lib/menu-store";
 import { createStoredOrder } from "../../../../../lib/operations-store";
+import { sendEmailNotification } from "../../../../../lib/notifications";
+import { getStoredTenantSettings } from "../../../../../lib/settings-store";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
   const tenantId = body.tenantId ?? "tenant_bella";
   const menu = await getStoredMenuContent(tenantId);
+  const tenant = await getStoredTenantSettings(tenantId);
+  const extAdminUsers = await getStoredExtAdminUsers(tenantId);
   const requestedItems = Array.isArray(body.items) ? body.items : [];
 
   const orderItems = requestedItems
@@ -65,6 +70,23 @@ export async function POST(request: NextRequest) {
     orderStatus: paymentMethod === "cash" ? "placed" : "pending_payment",
     paymentStatus: "pending"
   });
+
+  const orderEmailRecipients = extAdminUsers.filter((user) => user.orderEmailsEnabled);
+
+  for (const recipient of orderEmailRecipients) {
+    await sendEmailNotification({
+      tenantId,
+      to: recipient.email,
+      subject: `[${tenant.name}] New order ${order.orderNumber} | ${order.fulfillmentType === "delivery" ? "Delivery" : "Collection"}`,
+      text: [
+        `${order.customerName} placed a ${order.fulfillmentType} order.`,
+        `Order number: ${order.orderNumber}`,
+        `Total: ${order.total.toFixed(2)}`,
+        `Customer email: ${order.customerEmail}`,
+        `Customer phone: ${order.customerPhone || "Not provided"}`
+      ].join("\n")
+    });
+  }
 
   return NextResponse.json(
     {

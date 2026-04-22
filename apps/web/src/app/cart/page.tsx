@@ -1,9 +1,12 @@
 import { CartPageContent } from "../../components/storefront";
 import { LayoutShell } from "../../components/layout-shell";
-import { getDefaultTenant, getTenantBundle } from "../../lib/mock-data";
+import { getRuntimeTenantBundle } from "../../lib/content-store";
+import { getDefaultTenant } from "../../lib/mock-data";
 
-export default function CartRoute() {
-  const bundle = getTenantBundle(getDefaultTenant().id);
+export const dynamic = "force-dynamic";
+
+export default async function CartRoute() {
+  const bundle = await getRuntimeTenantBundle(getDefaultTenant().id);
 
   return (
     <LayoutShell

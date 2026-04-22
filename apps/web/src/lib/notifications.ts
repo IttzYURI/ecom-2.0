@@ -9,8 +9,10 @@ type EmailInput = {
 
 export async function sendEmailNotification(input: EmailInput) {
   let status: "queued" | "sent" | "failed" = "queued";
+  const fromEmail = process.env.SENDGRID_FROM_EMAIL;
+  const fromName = process.env.SENDGRID_FROM_NAME?.trim() || "Bella Roma Orders";
 
-  if (process.env.SENDGRID_API_KEY && process.env.SENDGRID_FROM_EMAIL) {
+  if (process.env.SENDGRID_API_KEY && fromEmail) {
     try {
       const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
         method: "POST",
@@ -20,7 +22,7 @@ export async function sendEmailNotification(input: EmailInput) {
         },
         body: JSON.stringify({
           personalizations: [{ to: [{ email: input.to }] }],
-          from: { email: process.env.SENDGRID_FROM_EMAIL },
+          from: { email: fromEmail, name: fromName },
           subject: input.subject,
           content: [{ type: "text/plain", value: input.text }]
         })

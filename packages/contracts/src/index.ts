@@ -152,6 +152,7 @@ export interface StaffMember {
   name: string;
   email: string;
   roleIds: string[];
+  orderEmailsEnabled: boolean;
 }
 
 export interface PlatformMetric {

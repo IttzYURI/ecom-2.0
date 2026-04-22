@@ -159,12 +159,17 @@ export function PublicContactForm({ tenantId }: { tenantId: string }) {
 
 export function PublicCheckoutForm({
   tenantId,
-  menuItems
+  menuItems,
+  checkoutItems
 }: {
   tenantId: string;
   menuItems: MenuItem[];
+  checkoutItems?: Array<{
+    item: MenuItem;
+    quantity: number;
+  }>;
 }) {
-  const checkoutItems = menuItems.slice(0, 3);
+  const selectedItems = checkoutItems ?? menuItems.slice(0, 3).map((item) => ({ item, quantity: 0 }));
   const [state, setState] = useState<FormState>({ type: "idle" });
   const [isPending, startTransition] = useTransition();
   const [paymentMessage, setPaymentMessage] = useState<string>("");
@@ -185,8 +190,8 @@ export function PublicCheckoutForm({
         const note = String(formData.get("note") ?? "").trim();
         const fulfillmentType = String(formData.get("fulfillmentType") ?? "delivery");
         const paymentMethod = String(formData.get("paymentMethod") ?? "stripe");
-        const items = checkoutItems
-          .map((item) => ({
+        const items = selectedItems
+          .map(({ item }) => ({
             menuItemId: item.id,
             quantity: Number(formData.get(`qty-${item.id}`) ?? 0)
           }))
@@ -279,13 +284,13 @@ export function PublicCheckoutForm({
       <Notice state={state} />
       {paymentMessage ? <p className="form-notice notice-success">{paymentMessage}</p> : null}
       <div className="stack">
-        {checkoutItems.map((item) => (
+        {selectedItems.map(({ item, quantity }) => (
           <label key={item.id} className="choice-card checkout-item-card">
             <span>
               <strong>{item.name}</strong>
               <span>{formatMoney(item.basePrice)}</span>
             </span>
-            <input name={`qty-${item.id}`} type="number" min="0" max="12" defaultValue="0" />
+            <input name={`qty-${item.id}`} type="number" min="0" max="12" defaultValue={quantity} />
           </label>
         ))}
       </div>

@@ -4,8 +4,7 @@ import { getExtAdminSession, requireExtAdminSession } from "../../../../../../li
 import { recordAuditEntry } from "../../../../../../lib/audit-store";
 import {
   getStoredExtAdminUserById,
-  updateStoredExtAdminUserOrderEmails,
-  updateStoredExtAdminUserRole
+  updateStoredExtAdminUserOrderEmails
 } from "../../../../../../lib/extadmin-user-store";
 
 export async function POST(request: NextRequest) {
@@ -17,26 +16,27 @@ export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const tenantId = String(formData.get("tenantId") ?? "tenant_bella");
   const userId = String(formData.get("userId") ?? "").trim();
-  const roleId = String(formData.get("roleId") ?? "role_manager").trim();
-  const orderEmailsEnabled = formData.has("orderEmailsEnabled");
+  const orderEmailsEnabled = String(formData.get("orderEmailsEnabled") ?? "false") === "true";
   const session = await getExtAdminSession(request);
 
-  if (userId && roleId) {
+  if (userId) {
     const user = await getStoredExtAdminUserById(tenantId, userId);
-    await updateStoredExtAdminUserRole(tenantId, userId, roleId);
     await updateStoredExtAdminUserOrderEmails(tenantId, userId, orderEmailsEnabled);
 
     if (user) {
       await recordAuditEntry(tenantId, {
-        action: "staff.role.update",
+        action: "staff.order_emails.update",
         actorEmail: session?.email ?? "unknown",
         target: user.email,
-        summary: `Assigned role ${roleId} to ${user.name} and set order emails ${orderEmailsEnabled ? "on" : "off"}`
+        summary: `${orderEmailsEnabled ? "Enabled" : "Disabled"} order emails for ${user.name}`
       });
     }
   }
 
   return NextResponse.redirect(
-    new URL("/extadmin/staff?status=success&message=Access+settings+updated.", request.url)
+    new URL(
+      `/extadmin/staff?status=success&message=${encodeURIComponent("Order email recipients updated.")}`,
+      request.url
+    )
   );
 }

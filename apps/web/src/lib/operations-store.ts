@@ -156,6 +156,24 @@ export async function updateStoredOrderPayment(
   }
 }
 
+export async function getStoredCustomerOrders(tenantId: string, email: string) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const current = await getStoredOperationsContent(tenantId);
+
+  return current.orders
+    .filter((order) => order.customerEmail.trim().toLowerCase() === normalizedEmail)
+    .sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
+}
+
+export async function getStoredActiveCustomerOrder(tenantId: string, email: string) {
+  const orders = await getStoredCustomerOrders(tenantId, email);
+  return (
+    orders.find((order) =>
+      ["pending_payment", "placed", "accepted", "preparing"].includes(order.orderStatus)
+    ) ?? null
+  );
+}
+
 export async function updateBookingStatus(
   tenantId: string,
   bookingId: string,

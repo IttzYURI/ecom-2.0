@@ -283,6 +283,90 @@ const bookings: Booking[] = [
 
 const orders: Order[] = [
   {
+    id: "order_4",
+    tenantId: "tenant_bella",
+    orderNumber: "BR-1058",
+    customerName: "Noah Carter",
+    customerEmail: "noah@example.com",
+    customerPhone: "+44 7700 900222",
+    fulfillmentType: "delivery",
+    address: "12 Baker Street, London",
+    items: [
+      {
+        menuItemId: "item_lasagne",
+        name: "Lasagne al Forno",
+        quantity: 1,
+        unitPrice: 13.9,
+        selectedOptions: []
+      },
+      {
+        menuItemId: "item_margherita",
+        name: "Margherita",
+        quantity: 1,
+        unitPrice: 11.5,
+        selectedOptions: []
+      }
+    ],
+    subtotal: 25.4,
+    deliveryFee: 3.5,
+    discount: 0,
+    total: 28.9,
+    orderStatus: "accepted",
+    paymentStatus: "paid",
+    createdAt: "2026-04-17T19:10:00.000Z"
+  },
+  {
+    id: "order_3",
+    tenantId: "tenant_bella",
+    orderNumber: "BR-1051",
+    customerName: "Noah Carter",
+    customerEmail: "noah@example.com",
+    customerPhone: "+44 7700 900222",
+    fulfillmentType: "collection",
+    items: [
+      {
+        menuItemId: "item_margherita",
+        name: "Margherita",
+        quantity: 1,
+        unitPrice: 11.5,
+        selectedOptions: []
+      }
+    ],
+    subtotal: 11.5,
+    deliveryFee: 0,
+    discount: 0,
+    total: 11.5,
+    orderStatus: "cancelled",
+    paymentStatus: "failed",
+    createdAt: "2026-04-15T18:20:00.000Z"
+  },
+  {
+    id: "order_2",
+    tenantId: "tenant_bella",
+    orderNumber: "BR-1047",
+    customerName: "Noah Carter",
+    customerEmail: "noah@example.com",
+    customerPhone: "+44 7700 900222",
+    fulfillmentType: "delivery",
+    address: "12 Baker Street, London",
+    items: [
+      {
+        menuItemId: "item_lasagne",
+        name: "Lasagne al Forno",
+        quantity: 2,
+        unitPrice: 13.9,
+        selectedOptions: []
+      }
+    ],
+    subtotal: 27.8,
+    deliveryFee: 3.5,
+    discount: 4,
+    total: 27.3,
+    orderStatus: "completed",
+    paymentStatus: "paid",
+    createdAt: "2026-04-13T20:45:00.000Z"
+  },
+  {
     id: "order_1",
     tenantId: "tenant_bella",
     orderNumber: "BR-1042",
@@ -309,8 +393,8 @@ const orders: Order[] = [
     deliveryFee: 3.5,
     discount: 0,
     total: 32.5,
-    orderStatus: "accepted",
-    paymentStatus: "paid",
+    orderStatus: "refunded",
+    paymentStatus: "refunded",
     createdAt: "2026-04-11T10:30:00.000Z"
   }
 ];
@@ -342,14 +426,16 @@ const staff: StaffMember[] = [
     tenantId: "tenant_bella",
     name: "Luca Romano",
     email: "luca@bellaroma.test",
-    roleIds: ["role_owner"]
+    roleIds: ["role_owner"],
+    orderEmailsEnabled: true
   },
   {
     id: "staff_2",
     tenantId: "tenant_bella",
     name: "Sara Dean",
     email: "sara@bellaroma.test",
-    roleIds: ["role_manager"]
+    roleIds: ["role_manager"],
+    orderEmailsEnabled: false
   }
 ];
 

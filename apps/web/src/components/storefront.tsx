@@ -3,8 +3,11 @@ import Link from "next/link";
 
 import type { MenuItem, TenantBundle } from "@rcc/contracts";
 
+import { AddToCartButton, CartPageClient, CheckoutPageClient, FloatingCartButton } from "./cart-ui";
+import { CustomerAuthForm } from "./customer-auth-form";
 import { formatMoney } from "../lib/currency";
-import { PublicBookingForm, PublicCheckoutForm, PublicContactForm } from "./public-interactions";
+import { MenuCategoryNav } from "./menu-category-nav";
+import { PublicBookingForm, PublicContactForm } from "./public-interactions";
 
 const fallbackGalleryImages = [
   "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=900&q=80",
@@ -41,11 +44,9 @@ function MenuHighlight({ item }: { item: MenuItem }) {
         <p>{item.description}</p>
         <div className="chip-row">
           {item.bestSeller ? <span className="chip">Best seller</span> : null}
-          {item.optionGroupIds.length ? <span className="chip">Customizable</span> : null}
-          {item.available ? <span className="chip">Available now</span> : <span className="chip">Sold out</span>}
         </div>
         <div className="menu-card-actions">
-          <Link href="/cart" className="button-primary compact-button">
+          <Link href="/cart" className="button-ghost compact-button menu-order-button">
             Add to order
           </Link>
           <Link href="/menu" className="text-link">
@@ -73,20 +74,13 @@ function MenuOrderingCard({ item }: { item: MenuItem }) {
             <h3>{item.name}</h3>
             <p>{item.description}</p>
           </div>
-          <strong>{formatMoney(item.basePrice)}</strong>
-        </div>
-        <div className="chip-row">
-          {item.bestSeller ? <span className="chip">Best seller</span> : null}
-          {item.optionGroupIds.length ? <span className="chip">Customizable</span> : null}
-          {item.available ? <span className="chip">Available now</span> : <span className="chip">Sold out</span>}
+          <div className="menu-order-card-meta">
+            <strong>{formatMoney(item.basePrice)}</strong>
+            {item.bestSeller ? <span className="chip">Best seller</span> : null}
+          </div>
         </div>
         <div className="menu-order-card-actions">
-          <Link href="/cart" className="button-primary compact-button">
-            Add to order
-          </Link>
-          <Link href="/checkout" className="text-link">
-            Quick checkout
-          </Link>
+          <AddToCartButton menuItemId={item.id} />
         </div>
       </div>
     </article>
@@ -104,6 +98,10 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
     <div className="home-stack stack-xl">
       <section className="hero-editorial">
         <div className="hero-editorial-copy">
+          <div className="hero-status">
+            <span className="hero-status-dot" aria-hidden="true" />
+            <span>Open now</span>
+          </div>
           <p className="eyebrow">Contemporary Italian dining</p>
           <h1>
             Savor every
@@ -118,10 +116,10 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
             first bite arrives.
           </p>
           <div className="actions">
-            <Link href="/booking" className="button-primary">
+            <Link href="/booking" className="button-ghost">
               Reserve your table
             </Link>
-            <Link href="/menu" className="button-ghost">
+            <Link href="/menu" className="button-primary">
               Order Now
             </Link>
           </div>
@@ -176,7 +174,7 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
         </article>
       </section>
 
-      <section className="split-story">
+      <section>
         <article className="panel tone-warm story-intro">
           <p className="eyebrow">Culinary artistry</p>
           <h2>Indulgent plates with a quieter sense of luxury</h2>
@@ -185,21 +183,21 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
             generous, and worth returning to.
           </p>
         </article>
-        <article className="story-side-note">
-          <p>
-            Explore our most-loved dishes, crafted with premium ingredients and plated
-            with the same care whether you dine in, collect, or order at home.
-          </p>
-        </article>
       </section>
 
       <section className="trio-showcase">
         {featured.map((item) => (
           <article key={item.id} className="showcase-dish">
-            <ResponsiveImage src={item.image} alt={item.name} sizes="(max-width: 768px) 100vw, 33vw" />
+            <div className="showcase-dish-media">
+              <span className="showcase-dish-badge">
+                {item.bestSeller ? "Best seller" : "Chef pick"}
+              </span>
+              <ResponsiveImage src={item.image} alt={item.name} sizes="(max-width: 768px) 100vw, 33vw" />
+            </div>
             <div className="showcase-dish-copy">
               <h3>{item.name}</h3>
-              <p>{formatMoney(item.basePrice)}</p>
+              <p>{item.description}</p>
+              <strong>{formatMoney(item.basePrice)}</strong>
             </div>
           </article>
         ))}
@@ -270,19 +268,6 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
           </div>
         </article>
       </section>
-
-      <section className="content-grid contact-bar-grid">
-        <article className="panel info-card">
-          <p className="eyebrow">Visit us</p>
-          <h2>10 Market Street, London</h2>
-          <p>Open daily for lunch through late evening service.</p>
-        </article>
-        <article className="panel info-card">
-          <p className="eyebrow">Call the team</p>
-          <h2>+44 20 1234 5678</h2>
-          <p>Bookings, allergen questions, and delivery support handled directly.</p>
-        </article>
-      </section>
     </div>
   );
 }
@@ -293,6 +278,7 @@ export function MenuPage({ bundle }: { bundle: TenantBundle }) {
   );
   return (
     <div className="menu-page stack-xl">
+      <FloatingCartButton menuItems={bundle.menuItems} />
       <section className="menu-hero">
         <article className="panel tone-dark menu-hero-copy">
           <p className="eyebrow">Menu overview</p>
@@ -305,13 +291,13 @@ export function MenuPage({ bundle }: { bundle: TenantBundle }) {
         </article>
       </section>
 
-      <nav className="menu-category-nav" aria-label="Menu categories">
-        {visibleCategories.map((category) => (
-          <a key={category.id} href={`#${toSectionId(category.name)}`} className="menu-category-pill">
-            {category.name}
-          </a>
-        ))}
-      </nav>
+      <MenuCategoryNav
+        categories={visibleCategories.map((category) => ({
+          id: category.id,
+          name: category.name,
+          href: `#${toSectionId(category.name)}`
+        }))}
+      />
 
       {visibleCategories.map((category) => {
         const items = bundle.menuItems.filter((item) => item.categoryIds.includes(category.id));
@@ -339,72 +325,11 @@ export function MenuPage({ bundle }: { bundle: TenantBundle }) {
 }
 
 export function CartPageContent({ bundle }: { bundle: TenantBundle }) {
-  const lines = bundle.menuItems.slice(0, 2);
-  const subtotal = lines.reduce((sum, item) => sum + item.basePrice, 0);
-  const delivery = 3.5;
-
-  return (
-    <div className="content-grid">
-      <section className="panel">
-        <p className="eyebrow">Your order</p>
-        <h2>Cart review</h2>
-        <div className="cart-lines">
-          {lines.map((item) => (
-            <article key={item.id} className="cart-line">
-              <ResponsiveImage src={item.image} alt={item.name} sizes="160px" />
-              <div>
-                <strong>{item.name}</strong>
-                <p>{item.description}</p>
-                <span>Qty 1</span>
-              </div>
-              <strong>{formatMoney(item.basePrice)}</strong>
-            </article>
-          ))}
-        </div>
-      </section>
-      <aside className="panel tone-warm">
-        <p className="eyebrow">Summary</p>
-        <h2>Ready for checkout</h2>
-        <div className="summary-list">
-          <div><span>Subtotal</span><strong>{formatMoney(subtotal)}</strong></div>
-          <div><span>Delivery</span><strong>{formatMoney(delivery)}</strong></div>
-          <div><span>Total</span><strong>{formatMoney(subtotal + delivery)}</strong></div>
-        </div>
-        <Link href="/checkout" className="button-primary block-button">
-          Continue to checkout
-        </Link>
-      </aside>
-    </div>
-  );
+  return <CartPageClient menuItems={bundle.menuItems} />;
 }
 
 export function CheckoutPageContent({ bundle }: { bundle: TenantBundle }) {
-  return (
-    <div className="content-grid checkout-grid">
-      <section className="panel">
-        <p className="eyebrow">Delivery details</p>
-        <h2>Finish the order</h2>
-        <PublicCheckoutForm tenantId={bundle.tenant.id} menuItems={bundle.menuItems} />
-      </section>
-      <aside className="panel tone-dark">
-        <p className="eyebrow">Payment</p>
-        <h2>Choose how to pay</h2>
-        <div className="stack">
-          <label className="choice-card light">
-            <input type="radio" name="payment" defaultChecked />
-            <span>Pay online by card</span>
-          </label>
-          <label className="choice-card light">
-            <input type="radio" name="payment" />
-            <span>Cash on delivery or collection</span>
-          </label>
-        </div>
-        <button type="button" className="button-primary block-button">
-          Place order
-        </button>
-      </aside>
-    </div>
-  );
+  return <CheckoutPageClient menuItems={bundle.menuItems} />;
 }
 
 export function GalleryPage({ bundle }: { bundle: TenantBundle }) {
@@ -530,21 +455,7 @@ export function AuthPage({
         <p>{subtitle}</p>
       </section>
       <section className="panel">
-        <form className="form-grid">
-          {mode === "signup" ? <input placeholder="Full name" /> : null}
-          <input placeholder="Email address" />
-          <input type="password" placeholder="Password" />
-          {mode === "signup" ? <input type="password" placeholder="Confirm password" /> : null}
-          <button type="button" className="button-primary">
-            {mode === "login" ? "Log in" : "Create account"}
-          </button>
-          <p className="auth-switch">
-            {mode === "login" ? "Need an account?" : "Already registered?"}{" "}
-            <Link href={mode === "login" ? "/signup" : "/login"} className="text-link">
-              {mode === "login" ? "Sign up" : "Log in"}
-            </Link>
-          </p>
-        </form>
+        <CustomerAuthForm mode={mode} />
       </section>
     </div>
   );
