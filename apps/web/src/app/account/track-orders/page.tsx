@@ -5,7 +5,6 @@ import { DeliveryTrackingView } from "../../../components/delivery-tracking-view
 import { LayoutShell } from "../../../components/layout-shell";
 import { formatMoney } from "../../../lib/currency";
 import { getCustomerSessionFromCookieStore } from "../../../lib/customer-auth";
-import { getDefaultTenant } from "../../../lib/mock-data";
 import { getStoredCustomerOrders } from "../../../lib/operations-store";
 import { serializeOrderTracking } from "../../../lib/tracking-view";
 
@@ -16,8 +15,7 @@ export default async function AccountTrackOrdersRoute() {
     redirect("/login");
   }
 
-  const tenantId = getDefaultTenant().id;
-  const orders = await getStoredCustomerOrders(tenantId, session.email);
+  const orders = await getStoredCustomerOrders(session.tenantId, session.email);
   const activeDeliveryOrders = orders.filter(
     (order) =>
       order.fulfillmentType === "delivery" &&

@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireExtAdminSession } from "../../../../../../../lib/extadmin-auth";
+import { requireExtAdminPermission } from "../../../../../../../lib/authz";
 import { createStoredCategory } from "../../../../../../../lib/menu-store";
 
 export async function POST(request: NextRequest) {
-  const unauthorized = await requireExtAdminSession(request);
-  if (unauthorized) {
-    return unauthorized;
+  const { session, response } = await requireExtAdminPermission(
+    request,
+    "tenant.menu.write"
+  );
+  if (response) {
+    return response;
   }
 
   const formData = await request.formData();
-  const tenantId = String(formData.get("tenantId") ?? "tenant_bella");
+  const tenantId = session.tenantId;
   const name = String(formData.get("name") ?? "").trim();
   const slug = String(formData.get("slug") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();

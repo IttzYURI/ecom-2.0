@@ -8,18 +8,18 @@ export function LayoutShell({
   children
 }: {
   eyebrow?: string;
-  title: string;
-  subtitle: string;
+  title?: string;
+  subtitle?: string;
   showHero?: boolean;
   children: ReactNode;
 }) {
   return (
     <main className="page-shell">
-      {showHero ? (
+      {showHero && title ? (
         <section className="page-hero">
           {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
           <h1>{title}</h1>
-          <p>{subtitle}</p>
+          {subtitle ? <p>{subtitle}</p> : null}
         </section>
       ) : null}
       {children}

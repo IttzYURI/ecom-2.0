@@ -41,7 +41,16 @@ export async function getStoredReviews(tenantId: string) {
   }
 
   const store = await readReviewsStore();
-  return store[tenantId] ?? getTenantBundle(tenantId).reviews;
+
+  if (store[tenantId]) {
+    return store[tenantId];
+  }
+
+  try {
+    return getTenantBundle(tenantId).reviews;
+  } catch {
+    return [];
+  }
 }
 
 export async function updateStoredReviews(tenantId: string, reviews: Review[]) {

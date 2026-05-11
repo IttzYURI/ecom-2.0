@@ -1,20 +1,27 @@
+import { FeatureGate } from "../../components/feature-gate";
 import { CheckoutPageContent } from "../../components/storefront";
 import { LayoutShell } from "../../components/layout-shell";
-import { getRuntimeTenantBundle } from "../../lib/content-store";
-import { getDefaultTenant } from "../../lib/mock-data";
+import { TenantUnavailablePage } from "../../components/tenant-unavailable";
+import { resolvePublicTenantBundle } from "../../lib/tenant";
 
 export const dynamic = "force-dynamic";
 
 export default async function CheckoutRoute() {
-  const bundle = await getRuntimeTenantBundle(getDefaultTenant().id);
+  const { bundle, status, features } = await resolvePublicTenantBundle();
+
+  if (status !== "active") {
+    return <TenantUnavailablePage status={status} />;
+  }
 
   return (
-    <LayoutShell
-      eyebrow="Checkout"
-      title="Checkout"
-      subtitle="Delivery details, payment choice, and final confirmation all happen here."
-    >
-      <CheckoutPageContent bundle={bundle} />
-    </LayoutShell>
+    <FeatureGate features={features} flag="onlineOrdering">
+      <LayoutShell
+        eyebrow="Checkout"
+        title="Checkout"
+        subtitle="Delivery details, payment choice, and final confirmation all happen here."
+      >
+        <CheckoutPageContent bundle={bundle} />
+      </LayoutShell>
+    </FeatureGate>
   );
 }

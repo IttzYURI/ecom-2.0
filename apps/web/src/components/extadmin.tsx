@@ -8,8 +8,11 @@ import type { ReactNode } from "react";
 
 import { formatMoney } from "../lib/currency";
 import type { AuditEntry } from "../lib/audit-store";
+import type { NotificationEntry } from "../lib/notifications-store";
 
 import type { TenantBundle } from "@rcc/contracts";
+
+type AdminOrder = TenantBundle["orders"][number];
 
 type NavItem = {
   href: Route;
@@ -54,13 +57,36 @@ const NAV_ITEMS: NavItem[] = [
     )
   },
   {
+    href: "/extadmin/categories",
+    label: "Categories",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+        <path d="M4 4h6v6H4z" />
+        <path d="M14 4h6v6h-6z" />
+        <path d="M4 14h6v6H4z" />
+        <path d="M17 17m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+      </svg>
+    )
+  },
+  {
     href: "/extadmin/content",
-    label: "Content",
+    label: "Website Content",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
         <rect x="3" y="4" width="18" height="16" rx="3" />
         <circle cx="8.5" cy="9" r="1.5" />
         <path d="M21 15l-4.5-4.5L7 20" />
+      </svg>
+    )
+  },
+  {
+    href: "/extadmin/media",
+    label: "Media / Gallery",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+        <rect x="3" y="3" width="18" height="18" rx="2" />
+        <circle cx="9" cy="9" r="2" />
+        <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
       </svg>
     )
   },
@@ -77,6 +103,58 @@ const NAV_ITEMS: NavItem[] = [
     )
   },
   {
+    href: "/extadmin/reviews",
+    label: "Reviews",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.27 5.82 22 7 14.14l-5-4.87 6.91-1.01L12 2z" />
+      </svg>
+    )
+  },
+  {
+    href: "/extadmin/delivery",
+    label: "Delivery & Collection",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+        <rect x="1" y="3" width="15" height="13" rx="2" />
+        <path d="m16 8 4 2v6h-4" />
+        <circle cx="5.5" cy="18.5" r="2.5" />
+        <circle cx="18.5" cy="18.5" r="2.5" />
+      </svg>
+    )
+  },
+  {
+    href: "/extadmin/opening-hours",
+    label: "Opening Hours",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M12 6v6l4 2" />
+      </svg>
+    )
+  },
+  {
+    href: "/extadmin/payments",
+    label: "Payments",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+        <rect x="1" y="4" width="22" height="16" rx="2" />
+        <path d="M1 10h22" />
+      </svg>
+    )
+  },
+  {
+    href: "/extadmin/printers",
+    label: "Printer Settings",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+        <path d="M6 9V2h12v7" />
+        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+        <rect x="6" y="14" width="12" height="8" />
+      </svg>
+    )
+  },
+  {
     href: "/extadmin/staff",
     label: "Staff",
     icon: (
@@ -89,12 +167,25 @@ const NAV_ITEMS: NavItem[] = [
     )
   },
   {
-    href: "/extadmin/settings",
-    label: "Settings",
+    href: "/extadmin/reports",
+    label: "Reports",
     icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
-        <circle cx="12" cy="12" r="3" />
-        <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.86l.06.06a2 2 0 1 1-2.82 2.82l-.06-.06a1.7 1.7 0 0 0-1.86-.34 1.7 1.7 0 0 0-1.02 1.56V22a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.02-1.56 1.7 1.7 0 0 0-1.86.34l-.06.06a2 2 0 1 1-2.82-2.82l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.02H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.65 8.4a1.7 1.7 0 0 0-.34-1.86l-.06-.06a2 2 0 1 1 2.82-2.82l.06.06A1.7 1.7 0 0 0 9 4.06c.64-.27 1.06-.9 1.02-1.59V2a2 2 0 1 1 4 0v.09c-.04.69.38 1.32 1.02 1.59a1.7 1.7 0 0 0 1.86-.34l.06-.06a2 2 0 1 1 2.82 2.82l-.06.06c-.48.48-.62 1.2-.34 1.86.27.64.9 1.06 1.59 1.02H22a2 2 0 1 1 0 4h-.09c-.69-.04-1.32.38-1.59 1.02Z" />
+        <path d="M18 20V10" />
+        <path d="M12 20V4" />
+        <path d="M6 20v-6" />
+      </svg>
+    )
+  },
+  {
+    href: "/extadmin/audit",
+    label: "Audit Logs",
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <path d="M14 2v6h6" />
+        <path d="M12 18v-6" />
+        <path d="M9 15h6" />
       </svg>
     )
   }
@@ -139,6 +230,38 @@ function getOrderTone(status: string) {
   return "warning";
 }
 
+function getPrintTone(order: AdminOrder) {
+  if (order.printState?.lastPrintStatus === "printed") {
+    return "success";
+  }
+
+  if (order.printState?.lastPrintStatus === "failed") {
+    return "danger";
+  }
+
+  if (order.orderStatus === "pending_payment") {
+    return "warning";
+  }
+
+  return "warning";
+}
+
+function getPrintLabel(order: AdminOrder) {
+  if (order.printState?.lastPrintStatus === "printed") {
+    return `Printed x${order.printState.printCount}`;
+  }
+
+  if (order.printState?.lastPrintStatus === "failed") {
+    return "Print failed";
+  }
+
+  if (order.orderStatus === "pending_payment") {
+    return "Awaiting payment";
+  }
+
+  return order.printState?.hasKitchenPrint ? "Printed" : "Pending print";
+}
+
 function AdminShellTopMeta() {
   return (
     <div className="admin-utility-cluster">
@@ -156,9 +279,9 @@ function AdminShellTopMeta() {
       <div className="admin-profile-chip">
         <div className="admin-profile-copy">
           <strong>Owner</strong>
-          <span>Bella Roma</span>
+          <span>Admin portal</span>
         </div>
-        <div className="admin-profile-avatar">BR</div>
+        <div className="admin-profile-avatar">RP</div>
       </div>
     </div>
   );
@@ -368,13 +491,25 @@ export function ExtAdminShell({
   );
 }
 
-export function ExtAdminLoginCard({ error }: { error?: string | null }) {
+export function ExtAdminLoginCard({
+  error,
+  tenantName,
+  defaultEmail,
+  platformTenantId
+}: {
+  error?: string | null;
+  tenantName?: string | null;
+  defaultEmail?: string | null;
+  platformTenantId?: string | null;
+}) {
   return (
     <main className="page-shell admin-login-shell">
       <section className="admin-login-card">
         <div className="admin-login-hero">
           <p className="eyebrow">Secure owner access</p>
-          <h1>Run Bella Roma from one polished control room.</h1>
+          <h1>
+            Run {tenantName ?? "your restaurant"} from one polished control room.
+          </h1>
           <p>
             Update content, menu visibility, booking flow, and team access without exposing any
             admin controls to guests.
@@ -395,14 +530,21 @@ export function ExtAdminLoginCard({ error }: { error?: string | null }) {
           <div>
             <p className="eyebrow">Owner sign in</p>
             <h2>Welcome back</h2>
-            <p>Use the seeded owner account to access the restaurant workspace.</p>
+            <p>
+              {platformTenantId
+                ? `Opened from Super Admin for ${tenantName ?? "this restaurant"}. Owner credentials are still required.`
+                : "Use the seeded owner account to access the restaurant workspace."}
+            </p>
           </div>
           <form className="form-grid" method="post" action="/api/v1/extadmin/login">
+            {platformTenantId ? (
+              <input type="hidden" name="platformTenant" value={platformTenantId} />
+            ) : null}
             <input
               name="email"
               type="email"
               placeholder="owner@bellaroma.test"
-              defaultValue="owner@bellaroma.test"
+              defaultValue={defaultEmail ?? "owner@bellaroma.test"}
             />
             <input
               name="password"
@@ -421,7 +563,13 @@ export function ExtAdminLoginCard({ error }: { error?: string | null }) {
   );
 }
 
-export function ExtAdminDashboard({ bundle }: { bundle: TenantBundle }) {
+export function ExtAdminDashboard({
+  bundle,
+  notifications
+}: {
+  bundle: TenantBundle;
+  notifications: NotificationEntry[];
+}) {
   const totalRevenue = bundle.orders.reduce((sum, order) => sum + (order.total || 0), 0);
   const totalCustomers = new Set(
     bundle.orders.map((order) => order.customerEmail || order.customerName || order.id)
@@ -616,6 +764,37 @@ export function ExtAdminDashboard({ bundle }: { bundle: TenantBundle }) {
             ) : null}
           </div>
         </section>
+
+        <section className="admin-surface-card">
+          <AdminSectionHeader
+            eyebrow="Email delivery"
+            title="Recent notifications"
+            description="Latest SendGrid delivery attempts with failure reasons when a message is rejected."
+          />
+          <div className="admin-timeline">
+            {notifications.map((notification) => (
+              <article
+                key={notification.id}
+                className={`admin-timeline-item ${notification.status === "failed" ? "admin-timeline-item-failed" : ""}`}
+              >
+                <h4>
+                  {notification.status === "failed" ? "Email failed" : "Email sent"} to{" "}
+                  {notification.to}
+                </h4>
+                <p>{notification.subject}</p>
+                {notification.providerError ? (
+                  <p className="admin-muted-line">{notification.providerError}</p>
+                ) : null}
+                <span className="admin-muted-line">
+                  {new Date(notification.createdAt).toLocaleString()}
+                </span>
+              </article>
+            ))}
+            {!notifications.length ? (
+              <div className="admin-empty-card">No notification attempts have been recorded yet.</div>
+            ) : null}
+          </div>
+        </section>
       </aside>
     </div>
   );
@@ -631,7 +810,7 @@ export function ExtAdminContentPage({ bundle }: { bundle: TenantBundle }) {
           description="Shape the first impression guests see across hero, gallery, and FAQ sections."
         />
         <form className="form-grid admin-form-stack" method="post" action="/api/v1/extadmin/content">
-          <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+
           <div className="admin-field-grid">
             <div>
               <p className="eyebrow">Hero title</p>
@@ -688,7 +867,7 @@ export function ExtAdminContentPage({ bundle }: { bundle: TenantBundle }) {
           description="Keep social proof aligned with the tone of the restaurant and the current menu."
         />
         <form className="form-grid admin-form-stack" method="post" action="/api/v1/extadmin/reviews">
-          <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+
           <div className="admin-panel-grid">
             {Array.from({ length: Math.max(bundle.reviews.length, 4) }, (_, index) => {
               const review = bundle.reviews[index];
@@ -771,7 +950,7 @@ export function ExtAdminMenuPage({
           <section className="admin-subcard">
             <h3>Add category</h3>
             <form className="form-grid admin-form-stack" method="post" action="/api/v1/extadmin/menu/categories/create">
-              <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+    
               <input name="name" placeholder="Category name" />
               <input name="slug" placeholder="category-slug" />
               <input name="description" placeholder="Short category description" />
@@ -788,7 +967,7 @@ export function ExtAdminMenuPage({
           <section className="admin-subcard">
             <h3>Add menu item</h3>
             <form className="form-grid admin-form-stack" method="post" action="/api/v1/extadmin/menu/items/create">
-              <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+    
               <input name="name" placeholder="Dish name" />
               <input name="slug" placeholder="dish-slug" />
               <input name="image" placeholder="Image URL" />
@@ -830,7 +1009,7 @@ export function ExtAdminMenuPage({
           description="Refine how the public menu is grouped and what guests can browse."
         />
         <form className="form-grid admin-form-stack" method="post" action="/api/v1/extadmin/menu">
-          <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+
           <div className="admin-panel-grid">
             {menu.categories.map((category, index) => (
               <section key={category.id} className="admin-subcard">
@@ -999,7 +1178,7 @@ export function ExtAdminOrdersPage({ bundle }: { bundle: TenantBundle }) {
                 <div>
                   <p className="eyebrow">Kitchen stage</p>
                   <form method="post" action="/api/v1/extadmin/orders/status" className="form-grid admin-form-stack">
-                    <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+          
                     <input type="hidden" name="orderId" value={order.id} />
                     <select name="orderStatus" defaultValue={order.orderStatus}>
                       <option value="pending_payment">Pending payment</option>
@@ -1017,7 +1196,7 @@ export function ExtAdminOrdersPage({ bundle }: { bundle: TenantBundle }) {
                 <div>
                   <p className="eyebrow">Assign driver</p>
                   <form method="post" action="/api/v1/extadmin/orders/assign-driver" className="form-grid admin-form-stack">
-                    <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+          
                     <input type="hidden" name="orderId" value={order.id} />
                     <select name="driverId" defaultValue={order.deliveryTracking?.assignedDriverId ?? ""}>
                       <option value="">Unassigned</option>
@@ -1041,7 +1220,7 @@ export function ExtAdminOrdersPage({ bundle }: { bundle: TenantBundle }) {
                 <div>
                   <p className="eyebrow">Dispatch milestone</p>
                   <form method="post" action="/api/v1/extadmin/orders/delivery-status" className="form-grid admin-form-stack">
-                    <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+          
                     <input type="hidden" name="orderId" value={order.id} />
                     <select
                       name="deliveryStatus"
@@ -1090,6 +1269,20 @@ export function ExtAdminOrdersPage({ bundle }: { bundle: TenantBundle }) {
                   <strong>Address</strong>
                   <span>{order.address || "Missing delivery address"}</span>
                 </div>
+                <div className="admin-breakdown-row">
+                  <strong>Printing</strong>
+                  <span>{getPrintLabel(order)}</span>
+                </div>
+                <div className="admin-breakdown-row">
+                  <strong>Print count</strong>
+                  <span>{String(order.printState?.printCount ?? 0)}</span>
+                </div>
+                {order.printState?.lastPrintError ? (
+                  <div className="admin-breakdown-row">
+                    <strong>Last print error</strong>
+                    <span>{order.printState.lastPrintError}</span>
+                  </div>
+                ) : null}
               </div>
             </section>
           ))}
@@ -1111,7 +1304,9 @@ export function ExtAdminOrdersPage({ bundle }: { bundle: TenantBundle }) {
                 <th>Customer</th>
                 <th>Fulfilment</th>
                 <th>Status</th>
+                <th>Printing</th>
                 <th>Total</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -1122,7 +1317,7 @@ export function ExtAdminOrdersPage({ bundle }: { bundle: TenantBundle }) {
                   <td data-label="Fulfilment">{toTitleCase(order.fulfillmentType || "online")}</td>
                   <td data-label="Status">
                     <form method="post" action="/api/v1/extadmin/orders/status" className="inline-status-form admin-inline-form">
-                      <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+            
                       <input type="hidden" name="orderId" value={order.id} />
                       <select name="orderStatus" defaultValue={order.orderStatus}>
                         <option value="pending_payment">Pending payment</option>
@@ -1138,10 +1333,46 @@ export function ExtAdminOrdersPage({ bundle }: { bundle: TenantBundle }) {
                       </button>
                     </form>
                   </td>
+                  <td data-label="Printing">
+                    <div className="admin-breakdown-list compact">
+                      <div className="admin-breakdown-row">
+                        <strong>
+                          <span className={`admin-badge ${getPrintTone(order)}`}>
+                            {getPrintLabel(order)}
+                          </span>
+                        </strong>
+                        <span>
+                          {order.printState?.lastPrintedAt
+                            ? new Date(order.printState.lastPrintedAt).toLocaleString()
+                            : "No successful print yet"}
+                        </span>
+                      </div>
+                      <div className="admin-breakdown-row">
+                        <strong>Reprints</strong>
+                        <span>{String(order.printState?.reprintCount ?? 0)}</span>
+                      </div>
+                      {order.printState?.lastPrintError ? (
+                        <div className="admin-breakdown-row">
+                          <strong>Last error</strong>
+                          <span>{order.printState.lastPrintError}</span>
+                        </div>
+                      ) : null}
+                    </div>
+                  </td>
                   <td data-label="Total">{formatMoney(order.total)}</td>
+                  <td data-label="Action">
+                    <form method="post" action="/api/v1/extadmin/orders/reprint" className="admin-inline-form">
+            
+                      <input type="hidden" name="orderId" value={order.id} />
+                      <input type="hidden" name="reason" value="Manual reprint from owner portal" />
+                      <button type="submit" className="button-ghost compact-button">
+                        Reprint kitchen ticket
+                      </button>
+                    </form>
+                  </td>
                 </tr>
               ))}
-              {!bundle.orders.length ? <EmptyRow colSpan={5} label="No orders yet." /> : null}
+              {!bundle.orders.length ? <EmptyRow colSpan={7} label="No orders yet." /> : null}
             </tbody>
           </table>
         </div>
@@ -1180,7 +1411,7 @@ export function ExtAdminBookingsPage({ bundle }: { bundle: TenantBundle }) {
                   <td data-label="Party">{booking.partySize}</td>
                   <td data-label="Status">
                     <form method="post" action="/api/v1/extadmin/bookings/status" className="inline-status-form admin-inline-form">
-                      <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+            
                       <input type="hidden" name="bookingId" value={booking.id} />
                       <select name="status" defaultValue={booking.status}>
                         <option value="pending">Pending</option>
@@ -1205,6 +1436,8 @@ export function ExtAdminBookingsPage({ bundle }: { bundle: TenantBundle }) {
 }
 
 export function ExtAdminSettingsPage({ bundle }: { bundle: TenantBundle }) {
+  const domains = (bundle as TenantBundle & { domains?: Array<{ domain: string; domainType: "subdomain" | "custom"; isPrimary: boolean; verificationStatus: string }> }).domains ?? [];
+
   return (
     <section className="admin-page-stack">
       <article className="admin-surface-card">
@@ -1214,7 +1447,7 @@ export function ExtAdminSettingsPage({ bundle }: { bundle: TenantBundle }) {
           description="Update operating information used across the public storefront and service flows."
         />
         <form className="form-grid admin-form-stack" method="post" action="/api/v1/extadmin/settings">
-          <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+
           <div className="admin-field-grid">
             <div>
               <p className="eyebrow">Restaurant name</p>
@@ -1254,6 +1487,26 @@ export function ExtAdminSettingsPage({ bundle }: { bundle: TenantBundle }) {
           </button>
         </form>
       </article>
+
+      {domains.length > 0 ? (
+        <article className="admin-surface-card">
+          <AdminSectionHeader
+            eyebrow="Connected domains"
+            title="Website domains"
+            description="Domains assigned to this restaurant. Contact platform support to add or change domains."
+          />
+          <ul className="plain-list admin-coverage-list">
+            {domains.map((domain) => (
+              <li key={domain.domain}>
+                <strong>{domain.domain}</strong>
+                <span>
+                  {domain.domainType} | {domain.isPrimary ? "Primary" : "Secondary"} | {domain.verificationStatus}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </article>
+      ) : null}
 
       <article className="admin-surface-card">
         <AdminSectionHeader
@@ -1304,7 +1557,7 @@ export function ExtAdminStaffPage({
           <section className="admin-subcard">
             <h3>Create staff account</h3>
             <form className="form-grid admin-form-stack" method="post" action="/api/v1/extadmin/staff/create">
-              <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+    
               <input name="name" placeholder="Full name" />
               <input name="email" type="email" placeholder="staff@bellaroma.test" />
               <input name="password" type="password" placeholder="Temporary password" />
@@ -1352,7 +1605,7 @@ export function ExtAdminStaffPage({
                   <p>{member.email}</p>
                 </div>
                 <form method="post" action="/api/v1/extadmin/staff/delete">
-                  <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+        
                   <input type="hidden" name="userId" value={member.id} />
                   <button type="submit" className="button-ghost compact-button">
                     Remove access
@@ -1362,7 +1615,7 @@ export function ExtAdminStaffPage({
 
               <div className="admin-field-grid compact">
                 <form className="form-grid admin-form-stack" method="post" action="/api/v1/extadmin/staff/role">
-                  <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+        
                   <input type="hidden" name="userId" value={member.id} />
                   <p className="eyebrow">Assigned role</p>
                   <select name="roleId" defaultValue={member.roleIds[0] ?? bundle.roles[0]?.id}>
@@ -1388,7 +1641,7 @@ export function ExtAdminStaffPage({
                 </form>
 
                 <form className="form-grid admin-form-stack" method="post" action="/api/v1/extadmin/staff/password">
-                  <input type="hidden" name="tenantId" value={bundle.tenant.id} />
+        
                   <input type="hidden" name="userId" value={member.id} />
                   <p className="eyebrow">Reset password</p>
                   <input name="password" type="password" placeholder="New password" />
@@ -1444,7 +1697,7 @@ export function ExtAdminMediaPage({
           <section className="admin-subcard">
             <h3>Add media asset</h3>
             <form className="form-grid admin-form-stack" method="post" action="/api/v1/extadmin/media/create">
-              <input type="hidden" name="tenantId" value="tenant_bella" />
+
               <input name="label" placeholder="Asset label" />
               <input name="url" placeholder="https://..." />
               <select name="kind" defaultValue="gallery">
@@ -1466,7 +1719,7 @@ export function ExtAdminMediaPage({
               action="/api/v1/extadmin/media/upload"
               encType="multipart/form-data"
             >
-              <input type="hidden" name="tenantId" value="tenant_bella" />
+
               <input name="label" placeholder="Uploaded asset label" />
               <select name="kind" defaultValue="gallery">
                 <option value="gallery">Gallery</option>
@@ -1500,7 +1753,7 @@ export function ExtAdminMediaPage({
                     <span className="admin-muted-line">Added {new Date(asset.createdAt).toLocaleDateString()}</span>
                   </div>
                   <form method="post" action="/api/v1/extadmin/media/delete">
-                    <input type="hidden" name="tenantId" value="tenant_bella" />
+      
                     <input type="hidden" name="assetId" value={asset.id} />
                     <button type="submit" className="button-ghost compact-button">
                       Delete asset

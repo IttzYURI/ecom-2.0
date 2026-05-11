@@ -1,9 +1,18 @@
+import { redirect } from "next/navigation";
+
 import { TenantCatalogPage } from "../../../components/admin";
 import { LayoutShell } from "../../../components/layout-shell";
-import { getDefaultTenant, getTenantBundle } from "../../../lib/mock-data";
+import { getExtAdminSessionFromCookieStore } from "../../../lib/extadmin-auth";
+import { getTenantBundle } from "../../../lib/mock-data";
 
-export default function AdminMenuPage() {
-  const bundle = getTenantBundle(getDefaultTenant().id);
+export default async function AdminMenuPage() {
+  const session = await getExtAdminSessionFromCookieStore();
+
+  if (!session) {
+    redirect("/extadmin/login");
+  }
+
+  const bundle = getTenantBundle(session.tenantId);
 
   return (
     <LayoutShell

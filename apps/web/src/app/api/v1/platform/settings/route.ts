@@ -1,11 +1,21 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function GET() {
+import { requirePlatformSuperAdminApi } from "../../../../../lib/authz";
+import { PLATFORM_FEATURE_KEYS } from "../../../../../lib/platform-tenant-store";
+
+export async function GET(request: NextRequest) {
+  const { response } = await requirePlatformSuperAdminApi(request);
+
+  if (response) {
+    return response;
+  }
+
   return NextResponse.json({
     success: true,
     data: {
       paymentProviders: ["stripe"],
-      featureFlags: ["tenant-impersonation", "menu-modifiers", "booking-workflow"]
+      featureFlags: PLATFORM_FEATURE_KEYS,
+      supportedPlans: ["starter", "growth", "enterprise"]
     },
     meta: {},
     error: null

@@ -11,6 +11,7 @@ export type NotificationEntry = {
   subject: string;
   text: string;
   status: "queued" | "sent" | "failed";
+  providerError?: string;
   createdAt: string;
 };
 

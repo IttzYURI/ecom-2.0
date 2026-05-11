@@ -1,20 +1,27 @@
+import { FeatureGate } from "../../components/feature-gate";
 import { LayoutShell } from "../../components/layout-shell";
 import { GalleryPage } from "../../components/storefront";
-import { getRuntimeTenantBundle } from "../../lib/content-store";
-import { getDefaultTenant } from "../../lib/mock-data";
+import { TenantUnavailablePage } from "../../components/tenant-unavailable";
+import { resolvePublicTenantBundle } from "../../lib/tenant";
 
 export const dynamic = "force-dynamic";
 
 export default async function GalleryRoute() {
-  const bundle = await getRuntimeTenantBundle(getDefaultTenant().id);
+  const { bundle, status, features } = await resolvePublicTenantBundle();
+
+  if (status !== "active") {
+    return <TenantUnavailablePage status={status} />;
+  }
 
   return (
-    <LayoutShell
-      eyebrow="Inside Bella Roma"
-      title="Gallery"
-      subtitle="A feel for the space, the energy, and the plates before guests even arrive."
-    >
-      <GalleryPage bundle={bundle} />
-    </LayoutShell>
+    <FeatureGate features={features} flag="gallery">
+      <LayoutShell
+        eyebrow="Gallery"
+        title="Gallery"
+        subtitle="A feel for the space, the energy, and the plates before guests even arrive."
+      >
+        <GalleryPage bundle={bundle} />
+      </LayoutShell>
+    </FeatureGate>
   );
 }

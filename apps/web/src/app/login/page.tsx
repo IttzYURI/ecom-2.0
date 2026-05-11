@@ -1,7 +1,12 @@
 import { LayoutShell } from "../../components/layout-shell";
 import { AuthPage } from "../../components/storefront";
+import { resolveTenantFromRequest } from "../../lib/tenant";
 
-export default function LoginRoute() {
+export const dynamic = "force-dynamic";
+
+export default async function LoginRoute() {
+  const tenant = await resolveTenantFromRequest();
+
   return (
     <LayoutShell
       eyebrow="Customer account"

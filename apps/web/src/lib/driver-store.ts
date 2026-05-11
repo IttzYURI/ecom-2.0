@@ -30,5 +30,14 @@ async function readDriversStore() {
 
 export async function getStoredDrivers(tenantId: string) {
   const store = await readDriversStore();
-  return store[tenantId] ?? getDefaultDrivers(tenantId);
+
+  if (store[tenantId]) {
+    return store[tenantId];
+  }
+
+  try {
+    return getDefaultDrivers(tenantId);
+  } catch {
+    return [];
+  }
 }

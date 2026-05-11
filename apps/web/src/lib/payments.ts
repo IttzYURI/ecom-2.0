@@ -34,30 +34,36 @@ export class StripePaymentProvider implements PaymentProvider {
   async createPaymentIntent(input: PaymentIntentInput): Promise<PaymentIntentResult> {
     const stripe = getStripeClient();
 
-    if (stripe) {
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(input.amount),
-        currency: input.currency,
-        automatic_payment_methods: {
-          enabled: true
-        },
-        metadata: {
-          tenantId: input.tenantId,
-          orderId: input.orderId
-        }
-      });
+    if (!stripe) {
+      if (process.env.NODE_ENV === "production") {
+        throw new Error("STRIPE_SECRET_KEY must be set in production to process payments.");
+      }
+
+      console.warn("[payments] WARNING: Stripe not configured. Returning mock payment intent.");
 
       return {
         provider: "stripe",
-        clientSecret: paymentIntent.client_secret ?? "",
-        externalId: paymentIntent.id
+        clientSecret: `pi_mock_secret_${input.orderId}`,
+        externalId: `pi_mock_${input.orderId}`
       };
     }
 
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(input.amount),
+      currency: input.currency,
+      automatic_payment_methods: {
+        enabled: true
+      },
+      metadata: {
+        tenantId: input.tenantId,
+        orderId: input.orderId
+      }
+    });
+
     return {
       provider: "stripe",
-      clientSecret: `pi_mock_secret_${input.orderId}`,
-      externalId: `pi_mock_${input.orderId}`
+      clientSecret: paymentIntent.client_secret ?? "",
+      externalId: paymentIntent.id
     };
   }
 
@@ -93,6 +99,15 @@ export async function verifyStripeWebhook(
   if (stripe && secret && signature) {
     return stripe.webhooks.constructEventAsync(payload, signature, secret);
   }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("Stripe webhook signature verification is required in production. Set STRIPE_WEBHOOK_SECRET.");
+  }
+
+  console.warn(
+    "[stripe-webhook] WARNING: Webhook signature not verified." +
+    " Set STRIPE_WEBHOOK_SECRET and STRIPE_SECRET_KEY for production."
+  );
 
   return JSON.parse(payload) as {
     type?: string;

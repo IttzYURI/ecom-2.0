@@ -8,6 +8,7 @@ import { getStoredStaffMembers } from "./extadmin-user-store";
 import { getStoredMenuContent } from "./menu-store";
 import { getStoredOperationsContent } from "./operations-store";
 import { getStoredReviews } from "./reviews-store";
+import { getPlatformTenantRegistryRecord } from "./platform-tenant-store";
 import { getStoredTenantSettings } from "./settings-store";
 import { getTenantDocument, saveTenantDocument } from "./tenant-document-store";
 
@@ -37,19 +38,47 @@ async function writeContentStore(store: ContentStore) {
   await fs.writeFile(contentFilePath, JSON.stringify(store, null, 2), "utf8");
 }
 
+async function buildFallbackStorefrontContent(tenantId: string): Promise<StorefrontContent> {
+  try {
+    return getDefaultStorefrontContent(tenantId);
+  } catch {
+    const tenant = await getStoredTenantSettings(tenantId);
+
+    return {
+      heroTitle: `Order direct from ${tenant.name}.`,
+      heroSubtitle: tenant.description || `${tenant.name} is ready for online ordering.`,
+      about:
+        tenant.description ||
+        `${tenant.name} is live on the platform. Update this homepage copy from restaurant admin.`,
+      galleryImages: [],
+      faq: [
+        {
+          question: "Do you offer delivery?",
+          answer: "Delivery settings can be updated from restaurant admin."
+        },
+        {
+          question: "Can I collect my order?",
+          answer: "Collection availability can be updated from restaurant admin."
+        }
+      ]
+    };
+  }
+}
+
 export async function getStoredStorefrontContent(tenantId: string): Promise<StorefrontContent> {
+  const fallback = await buildFallbackStorefrontContent(tenantId);
   const mongoContent = await getTenantDocument<StorefrontContent>("storefront_content", tenantId);
 
   if (mongoContent) {
     return {
-      ...getDefaultStorefrontContent(tenantId),
+      ...fallback,
       ...mongoContent
     };
   }
 
   const store = await readContentStore();
   return {
-    ...getDefaultStorefrontContent(tenantId),
+    ...fallback,
     ...(store[tenantId] ?? {})
   };
 }
@@ -70,12 +99,15 @@ export async function updateStoredStorefrontContent(
 }
 
 export async function getRuntimeTenantBundle(tenantId: string) {
-  const content = await getStoredStorefrontContent(tenantId);
-  const menu = await getStoredMenuContent(tenantId);
-  const operations = await getStoredOperationsContent(tenantId);
-  const reviews = await getStoredReviews(tenantId);
-  const staff = await getStoredStaffMembers(tenantId);
-  const tenant = await getStoredTenantSettings(tenantId);
+  const [content, menu, operations, reviews, staff, tenant, registryRecord] = await Promise.all([
+    getStoredStorefrontContent(tenantId),
+    getStoredMenuContent(tenantId),
+    getStoredOperationsContent(tenantId),
+    getStoredReviews(tenantId),
+    getStoredStaffMembers(tenantId),
+    getStoredTenantSettings(tenantId),
+    getPlatformTenantRegistryRecord(tenantId)
+  ]);
 
   const bundle = getTenantBundle(
     tenantId,
@@ -85,8 +117,16 @@ export async function getRuntimeTenantBundle(tenantId: string) {
     tenant
   );
 
+  const domains = registryRecord?.domains.map((d) => ({
+    domain: d.domain,
+    domainType: d.domainType,
+    isPrimary: d.isPrimary,
+    verificationStatus: d.verificationStatus
+  })) ?? [];
+
   return {
     ...bundle,
+    domains,
     reviews,
     staff,
     orders: operations.orders,

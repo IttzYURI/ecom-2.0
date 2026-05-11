@@ -1,17 +1,19 @@
 import { NextRequest } from "next/server";
 
-import { requireExtAdminSession } from "../../../../../../lib/extadmin-auth";
-import { getDefaultTenant } from "../../../../../../lib/mock-data";
+import { requireExtAdminPermissionApi } from "../../../../../../lib/authz";
 import { getRuntimeTenantBundleWithOperations } from "../../../../../../lib/operations-store";
 
 export async function GET(request: NextRequest) {
-  const unauthorized = await requireExtAdminSession(request);
+  const { session, response } = await requireExtAdminPermissionApi(
+    request,
+    "tenant.orders.read"
+  );
 
-  if (unauthorized) {
-    return unauthorized;
+  if (response) {
+    return response;
   }
 
-  const tenantId = request.nextUrl.searchParams.get("tenantId")?.trim() || getDefaultTenant().id;
+  const tenantId = session.tenantId;
 
   const stream = new ReadableStream({
     async start(controller) {

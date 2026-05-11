@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { LayoutShell } from "../../../components/layout-shell";
 import { OrderHistoryList } from "../../../components/order-history-list";
 import { getCustomerSessionFromCookieStore } from "../../../lib/customer-auth";
-import { getDefaultTenant } from "../../../lib/mock-data";
 import { getStoredCustomerOrders } from "../../../lib/operations-store";
 
 export default async function AccountOrderHistoryRoute() {
@@ -14,8 +13,7 @@ export default async function AccountOrderHistoryRoute() {
     redirect("/login");
   }
 
-  const tenantId = getDefaultTenant().id;
-  const orders = await getStoredCustomerOrders(tenantId, session.email);
+  const orders = await getStoredCustomerOrders(session.tenantId, session.email);
 
   return (
     <LayoutShell

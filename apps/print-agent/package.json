@@ -1,0 +1,50 @@
+{
+  "name": "@rcc/print-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Windows-first Electron print station for RCC order printing.",
+  "author": "OpenAI Codex",
+  "main": "dist/main/main.js",
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:renderer\" \"npm:dev:main\" \"npm:dev:electron\"",
+    "dev:renderer": "vite",
+    "dev:main": "tsc --project tsconfig.main.json --watch --preserveWatchOutput",
+    "dev:electron": "wait-on tcp:5173 file:dist/main/main.js file:dist/preload/index.js && electron .",
+    "build": "npm run build:main && npm run build:renderer",
+    "build:main": "tsc --project tsconfig.main.json",
+    "build:renderer": "vite build",
+    "package": "npm run build && electron-builder --dir",
+    "package:win": "npm run build && electron-builder --win nsis"
+  },
+  "build": {
+    "appId": "com.rcc.printagent",
+    "productName": "RCC Print Agent",
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "22.15.3",
+    "concurrently": "^9.2.1",
+    "electron": "35.5.1",
+    "electron-builder": "^26.0.12",
+    "typescript": "5.8.3",
+    "vite": "^7.1.9",
+    "wait-on": "^8.0.5"
+  }
+}

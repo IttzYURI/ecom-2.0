@@ -14,7 +14,18 @@ type DriverSessionPayload = {
 };
 
 function getAuthSecret() {
-  return process.env.DRIVER_AUTH_SECRET?.trim() || process.env.AUTH_SECRET?.trim() || "bella-roma-driver-dev-secret";
+  const secret = process.env.DRIVER_AUTH_SECRET?.trim() || process.env.AUTH_SECRET?.trim();
+
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("DRIVER_AUTH_SECRET or AUTH_SECRET must be set in production.");
+    }
+
+    console.warn("[driver-auth] WARNING: Using default dev secret. Set AUTH_SECRET for production.");
+    return "bella-roma-driver-dev-secret";
+  }
+
+  return secret;
 }
 
 function textEncoder() {

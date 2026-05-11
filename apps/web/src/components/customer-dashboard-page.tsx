@@ -64,8 +64,10 @@ function getOrderProgress(order: Order) {
   const statusFloor: Record<Order["orderStatus"], number> = {
     pending_payment: 0.12,
     placed: 0.24,
-    accepted: 0.48,
-    preparing: 0.76,
+    accepted: 0.36,
+    preparing: 0.56,
+    ready: 0.76,
+    out_for_delivery: 0.88,
     completed: 1,
     cancelled: 1,
     refunded: 1
@@ -82,13 +84,17 @@ function getOrderProgress(order: Order) {
           ? "Accepted"
           : order.orderStatus === "preparing"
             ? "Kitchen prep"
-            : order.orderStatus === "completed"
-              ? order.fulfillmentType === "delivery"
-                ? "Delivered"
-                : "Collected"
-              : order.orderStatus === "cancelled"
-                ? "Cancelled"
-                : "Refunded";
+            : order.orderStatus === "ready"
+              ? "Ready for collection"
+              : order.orderStatus === "out_for_delivery"
+                ? "Out for delivery"
+                : order.orderStatus === "completed"
+                  ? order.fulfillmentType === "delivery"
+                    ? "Delivered"
+                    : "Collected"
+                  : order.orderStatus === "cancelled"
+                    ? "Cancelled"
+                    : "Refunded";
 
   return {
     progress,

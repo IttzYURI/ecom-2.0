@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { createDriverSessionToken, getDriverCookieOptions } from "../../../../../lib/driver-auth";
 import { getStoredDrivers } from "../../../../../lib/driver-store";
-import { getDefaultTenant } from "../../../../../lib/mock-data";
+import { resolvePublicTenantFromRequest } from "../../../../../lib/tenant-resolver";
 
 export async function POST(request: NextRequest) {
   const formData = await request.formData();
-  const tenantId = String(formData.get("tenantId") ?? getDefaultTenant().id);
+  const tenantId = (await resolvePublicTenantFromRequest(request)).tenantId;
   const driverId = String(formData.get("driverId") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const driver = (await getStoredDrivers(tenantId)).find(

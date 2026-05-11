@@ -1,13 +1,12 @@
 import { NextRequest } from "next/server";
 
-import { getDriverSession } from "../../../../../../lib/driver-auth";
-import { getStoredDrivers } from "../../../../../../lib/driver-store";
+import { filterOrdersForDriver, requireDriverActor } from "../../../../../../lib/authz";
 import { getStoredOperationsContent } from "../../../../../../lib/operations-store";
 
 export async function GET(request: NextRequest) {
-  const session = await getDriverSession(request);
+  const { session, driver, response } = await requireDriverActor(request);
 
-  if (!session) {
+  if (response) {
     return new Response("Unauthorized", { status: 401 });
   }
 
@@ -15,13 +14,12 @@ export async function GET(request: NextRequest) {
     async start(controller) {
       const encoder = new TextEncoder();
       const send = async () => {
-        const driver = (await getStoredDrivers(session.tenantId)).find((entry) => entry.id === session.driverId);
         const operations = await getStoredOperationsContent(session.tenantId);
         controller.enqueue(
           encoder.encode(
             `data: ${JSON.stringify({
               driver,
-              orders: operations.orders
+              orders: filterOrdersForDriver(operations.orders, session.driverId)
             })}\n\n`
           )
         );

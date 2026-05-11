@@ -1,12 +1,20 @@
+import { redirect } from "next/navigation";
+
 import { ExtAdminMenuPage, ExtAdminShell } from "../../../components/extadmin";
 import { getStoredStorefrontContent } from "../../../lib/content-store";
+import { getExtAdminSessionFromCookieStore } from "../../../lib/extadmin-auth";
 import { getStoredMenuContent, getRuntimeTenantBundleWithMenu } from "../../../lib/menu-store";
-import { getDefaultTenant } from "../../../lib/mock-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function ExtAdminMenuRoute() {
-  const tenantId = getDefaultTenant().id;
+  const session = await getExtAdminSessionFromCookieStore();
+
+  if (!session) {
+    redirect("/extadmin/login");
+  }
+
+  const tenantId = session.tenantId;
   const content = await getStoredStorefrontContent(tenantId);
   const bundle = await getRuntimeTenantBundleWithMenu(tenantId, content);
   const menu = await getStoredMenuContent(tenantId);

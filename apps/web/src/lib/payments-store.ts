@@ -1,6 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
+import { getMongoDb, isMongoConfigured } from "./mongo";
 import { getTenantDocument, saveTenantDocument } from "./tenant-document-store";
 
 export type StoredPayment = {
@@ -20,6 +21,12 @@ export type StoredPayment = {
 const paymentsFilePath = path.join(process.cwd(), "data", "payments-content.json");
 
 type PaymentStore = Record<string, StoredPayment[]>;
+
+interface StoredPaymentDocument {
+  tenantId: string;
+  payload: StoredPayment[];
+  updatedAt: string;
+}
 
 function createId(prefix: string) {
   return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
@@ -42,6 +49,10 @@ async function readPaymentsStore(): Promise<PaymentStore> {
 
 async function writePaymentsStore(store: PaymentStore) {
   await fs.writeFile(paymentsFilePath, JSON.stringify(store, null, 2), "utf8");
+}
+
+function findPaymentByExternalId(payments: StoredPayment[], externalId: string) {
+  return payments.find((payment) => payment.externalId === externalId) ?? null;
 }
 
 export async function getStoredPayments(tenantId: string) {
@@ -87,7 +98,53 @@ export async function createStoredPayment(
 
 export async function getStoredPaymentByExternalId(tenantId: string, externalId: string) {
   const payments = await getStoredPayments(tenantId);
-  return payments.find((payment) => payment.externalId === externalId) ?? null;
+  return findPaymentByExternalId(payments, externalId);
+}
+
+export async function findStoredPaymentByExternalId(
+  externalId: string,
+  tenantIdHint?: string
+) {
+  if (tenantIdHint) {
+    const hintedPayment = await getStoredPaymentByExternalId(tenantIdHint, externalId);
+
+    if (hintedPayment) {
+      return hintedPayment;
+    }
+  }
+
+  if (isMongoConfigured()) {
+    const db = await getMongoDb();
+    const collection = db.collection<StoredPaymentDocument>("payments_content");
+    const document = await collection.findOne(
+      tenantIdHint
+        ? {
+            tenantId: { $ne: tenantIdHint },
+            "payload.externalId": externalId
+          }
+        : {
+            "payload.externalId": externalId
+          }
+    );
+
+    return document ? findPaymentByExternalId(document.payload, externalId) : null;
+  }
+
+  const store = await readPaymentsStore();
+
+  for (const [tenantId, payments] of Object.entries(store)) {
+    if (tenantId === tenantIdHint) {
+      continue;
+    }
+
+    const payment = findPaymentByExternalId(payments, externalId);
+
+    if (payment) {
+      return payment;
+    }
+  }
+
+  return null;
 }
 
 export async function updateStoredPaymentStatus(

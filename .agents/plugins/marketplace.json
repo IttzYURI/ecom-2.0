@@ -1,0 +1,20 @@
+{
+  "name": "ecom-2.0-local-plugins",
+  "interface": {
+    "displayName": "Local Project Plugins"
+  },
+  "plugins": [
+    {
+      "name": "caveman",
+      "source": {
+        "source": "local",
+        "path": "./plugins/caveman"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

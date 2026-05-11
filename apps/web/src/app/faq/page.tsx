@@ -1,12 +1,16 @@
 import { LayoutShell } from "../../components/layout-shell";
 import { FaqPage } from "../../components/storefront";
-import { getRuntimeTenantBundle } from "../../lib/content-store";
-import { getDefaultTenant } from "../../lib/mock-data";
+import { TenantUnavailablePage } from "../../components/tenant-unavailable";
+import { resolvePublicTenantBundle } from "../../lib/tenant";
 
 export const dynamic = "force-dynamic";
 
 export default async function FaqRoute() {
-  const bundle = await getRuntimeTenantBundle(getDefaultTenant().id);
+  const { bundle, status } = await resolvePublicTenantBundle();
+
+  if (status !== "active") {
+    return <TenantUnavailablePage status={status} />;
+  }
 
   return (
     <LayoutShell

@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireExtAdminSession } from "../../../../../../lib/extadmin-auth";
+import { requireExtAdminPermission } from "../../../../../../lib/authz";
 import { createStoredMediaAsset } from "../../../../../../lib/media-store";
 
 export async function POST(request: NextRequest) {
-  const unauthorized = await requireExtAdminSession(request);
-  if (unauthorized) {
-    return unauthorized;
+  const { session, response } = await requireExtAdminPermission(
+    request,
+    "tenant.media.write"
+  );
+  if (response) {
+    return response;
   }
 
   const formData = await request.formData();
-  const tenantId = String(formData.get("tenantId") ?? "tenant_bella");
+  const tenantId = session.tenantId;
   const label = String(formData.get("label") ?? "").trim();
   const url = String(formData.get("url") ?? "").trim();
   const kind = String(formData.get("kind") ?? "gallery").trim() as "gallery" | "hero" | "general";

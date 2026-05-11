@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 type MobileSiteNavProps = {
   accountHref: Route;
   accountLabel: string;
+  brandName?: string;
 };
 
 const PRIMARY_LINKS = [
@@ -20,7 +21,7 @@ const PRIMARY_LINKS = [
   { href: "/booking" as Route, label: "Book" }
 ] as const;
 
-export function MobileSiteNav({ accountHref, accountLabel }: MobileSiteNavProps) {
+export function MobileSiteNav({ accountHref, accountLabel, brandName = "Restaurant" }: MobileSiteNavProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -70,7 +71,7 @@ export function MobileSiteNav({ accountHref, accountLabel }: MobileSiteNavProps)
         aria-hidden={open ? undefined : true}
       >
         <div className="mobile-nav-drawer-head">
-          <strong>Bella Roma</strong>
+          <strong>{brandName}</strong>
           <button
             type="button"
             className="mobile-nav-close"

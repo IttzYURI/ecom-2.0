@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { getRuntimeTenantBundle } from "../../../../../lib/content-store";
-import { getDefaultTenant } from "../../../../../lib/mock-data";
+import { resolvePublicTenantFromRequest } from "../../../../../lib/tenant-resolver";
 
-export async function GET() {
-  const bundle = await getRuntimeTenantBundle(getDefaultTenant().id);
+export async function GET(request: NextRequest) {
+  const resolvedTenant = await resolvePublicTenantFromRequest(request);
+  const bundle = await getRuntimeTenantBundle(resolvedTenant.tenantId);
 
   return NextResponse.json({
     success: true,

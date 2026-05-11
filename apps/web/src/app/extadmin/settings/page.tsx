@@ -1,11 +1,19 @@
+import { redirect } from "next/navigation";
+
 import { ExtAdminSettingsPage, ExtAdminShell } from "../../../components/extadmin";
 import { getRuntimeTenantBundle } from "../../../lib/content-store";
-import { getDefaultTenant } from "../../../lib/mock-data";
+import { getExtAdminSessionFromCookieStore } from "../../../lib/extadmin-auth";
 
 export const dynamic = "force-dynamic";
 
 export default async function ExtAdminSettingsRoute() {
-  const bundle = await getRuntimeTenantBundle(getDefaultTenant().id);
+  const session = await getExtAdminSessionFromCookieStore();
+
+  if (!session) {
+    redirect("/extadmin/login");
+  }
+
+  const bundle = await getRuntimeTenantBundle(session.tenantId);
 
   return (
     <ExtAdminShell

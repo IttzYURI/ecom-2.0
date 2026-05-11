@@ -1,12 +1,29 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { requireTenantFeature } from "../../../../../lib/feature-gating";
 import { sendEmailNotification } from "../../../../../lib/notifications";
 import { createStoredBooking } from "../../../../../lib/operations-store";
 import { getStoredTenantSettings } from "../../../../../lib/settings-store";
+import { resolvePublicTenantFromRequest } from "../../../../../lib/tenant-resolver";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const tenantId = body.tenantId ?? "tenant_bella";
+  const tenantId = (await resolvePublicTenantFromRequest(request)).tenantId;
+
+  const { allowed } = await requireTenantFeature(tenantId, "tableBooking");
+
+  if (!allowed) {
+    return NextResponse.json(
+      {
+        success: false,
+        data: null,
+        meta: {},
+        error: { code: "BOOKINGS_DISABLED", message: "Table bookings are not available for this restaurant." }
+      },
+      { status: 403 }
+    );
+  }
+
   const tenant = await getStoredTenantSettings(tenantId);
   const booking = await createStoredBooking(tenantId, {
     customerName: body.customerName ?? "Guest",

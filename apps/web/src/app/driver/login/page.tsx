@@ -1,6 +1,6 @@
 import { LayoutShell } from "../../../components/layout-shell";
 import { getStoredDrivers } from "../../../lib/driver-store";
-import { getDefaultTenant } from "../../../lib/mock-data";
+import { resolveTenantFromRequest } from "../../../lib/tenant";
 
 export default async function DriverLoginPage({
   searchParams
@@ -9,7 +9,8 @@ export default async function DriverLoginPage({
 }) {
   const params = await searchParams;
   const error = Array.isArray(params.error) ? params.error[0] : params.error;
-  const drivers = (await getStoredDrivers(getDefaultTenant().id)).filter((driver) => driver.active);
+  const tenant = await resolveTenantFromRequest();
+  const drivers = (await getStoredDrivers(tenant.id)).filter((driver) => driver.active);
 
   return (
     <LayoutShell
@@ -19,7 +20,6 @@ export default async function DriverLoginPage({
     >
       <section className="panel">
         <form className="form-grid" action="/api/v1/driver/login" method="post">
-          <input type="hidden" name="tenantId" value={getDefaultTenant().id} />
           <select name="driverId" defaultValue={drivers[0]?.id}>
             {drivers.map((driver) => (
               <option key={driver.id} value={driver.id}>

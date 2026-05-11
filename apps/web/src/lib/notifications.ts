@@ -9,10 +9,23 @@ type EmailInput = {
 
 export async function sendEmailNotification(input: EmailInput) {
   let status: "queued" | "sent" | "failed" = "queued";
-  const fromEmail = process.env.SENDGRID_FROM_EMAIL;
+  let providerError: string | undefined;
+  const fromEmail = process.env.SENDGRID_FROM_EMAIL?.trim();
   const fromName = process.env.SENDGRID_FROM_NAME?.trim() || "Bella Roma Orders";
+  const toEmail = input.to.trim();
 
-  if (process.env.SENDGRID_API_KEY && fromEmail) {
+  if (!toEmail) {
+    status = "failed";
+    providerError = "Missing recipient email address.";
+  } else if (!process.env.SENDGRID_API_KEY) {
+    status = "failed";
+    providerError = "Missing SENDGRID_API_KEY environment variable.";
+  } else if (!fromEmail) {
+    status = "failed";
+    providerError = "Missing SENDGRID_FROM_EMAIL environment variable.";
+  }
+
+  if (!providerError) {
     try {
       const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
         method: "POST",
@@ -21,24 +34,36 @@ export async function sendEmailNotification(input: EmailInput) {
           Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`
         },
         body: JSON.stringify({
-          personalizations: [{ to: [{ email: input.to }] }],
+          personalizations: [{ to: [{ email: toEmail }] }],
           from: { email: fromEmail, name: fromName },
           subject: input.subject,
           content: [{ type: "text/plain", value: input.text }]
         })
       });
 
-      status = response.ok ? "sent" : "failed";
-    } catch {
+      if (response.ok) {
+        status = "sent";
+      } else {
+        status = "failed";
+
+        const responseText = await response.text();
+
+        providerError =
+          responseText.trim() ||
+          `SendGrid rejected the email with status ${response.status}.`;
+      }
+    } catch (error) {
       status = "failed";
+      providerError = error instanceof Error ? error.message : "Unknown SendGrid request failure.";
     }
   }
 
   return createStoredNotification(input.tenantId, {
     channel: "email",
-    to: input.to,
+    to: toEmail,
     subject: input.subject,
     text: input.text,
-    status
+    status,
+    providerError
   });
 }

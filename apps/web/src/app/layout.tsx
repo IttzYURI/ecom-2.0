@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import type { Route } from "next";
 import type { ReactNode } from "react";
@@ -5,38 +6,83 @@ import type { ReactNode } from "react";
 import { MobileSiteNav } from "../components/mobile-site-nav";
 import { SiteBanner } from "../components/site-banner";
 import { getCustomerSessionFromCookieStore } from "../lib/customer-auth";
+import { getStoredTenantSettings } from "../lib/settings-store";
+import type { TenantFeatureFlagsRecord } from "../lib/tenant-feature-flags-store";
+import { getTenantFeatureFlagsRecord } from "../lib/tenant-feature-flags-store";
+import { resolveTenantIdFromRequest } from "../lib/tenant";
 
 import "./globals.css";
 
-export const metadata = {
-  title: "Bella Roma",
-  description: "Direct restaurant ordering, bookings, and customer experience website."
-};
-
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const tenantId = await resolveTenantIdFromRequest();
+    const tenant = await getStoredTenantSettings(tenantId);
+
+    return {
+      title: tenant.branding?.logoText ?? tenant.name,
+      description: tenant.description,
+      openGraph: tenant.branding?.heroImage
+        ? { images: [{ url: tenant.branding.heroImage }] }
+        : undefined
+    };
+  } catch {
+    return {
+      title: "Restaurant",
+      description: "Direct restaurant ordering, bookings, and customer experience website."
+    };
+  }
+}
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const customerSession = await getCustomerSessionFromCookieStore();
   const accountHref: Route = customerSession ? "/account" : "/login";
   const accountLabel = customerSession?.name || (customerSession ? "Account" : "Login");
 
+  let tenant;
+  let features: TenantFeatureFlagsRecord | null = null;
+  try {
+    const tenantId = await resolveTenantIdFromRequest();
+    tenant = await getStoredTenantSettings(tenantId);
+    features = await getTenantFeatureFlagsRecord(tenantId);
+  } catch {
+    tenant = null;
+  }
+
+  const showGallery = features?.gallery !== false;
+  const showReviews = features?.reviews !== false;
+  const showBooking = features?.tableBooking !== false;
+
+  const brandName = tenant?.branding?.logoText ?? tenant?.name ?? "Restaurant";
+  const brandColor = tenant?.branding?.primaryColor ?? "#9d2f2f";
+  const accentColor = tenant?.branding?.accentColor ?? "#f5d9a6";
+  const heroImage = tenant?.branding?.heroImage ?? "";
+
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      style={{
+        "--brand-primary": brandColor,
+        "--brand-accent": accentColor,
+        ...(heroImage ? { "--brand-hero-image": `url(${heroImage})` } as React.CSSProperties : {})
+      } as React.CSSProperties}
+    >
       <body>
         <SiteBanner />
         <header className="site-header">
           <div className="chrome-inner">
             <Link href="/" className="brand-lockup">
-              Bella Roma
+              {brandName}
             </Link>
             <nav className="nav-links" aria-label="Primary">
               <Link href="/">Home</Link>
               <Link href="/menu">Menu</Link>
-              <Link href="/gallery">Gallery</Link>
-              <Link href="/reviews">Reviews</Link>
+              {showGallery ? <Link href="/gallery">Gallery</Link> : null}
+              {showReviews ? <Link href="/reviews">Reviews</Link> : null}
               <Link href="/faq">FAQ</Link>
               <Link href="/contact">Contact</Link>
-              <Link href="/booking">Book</Link>
+              {showBooking ? <Link href="/booking">Book</Link> : null}
             </nav>
             <div className="header-actions">
               <Link href="/menu" className="button-primary compact-button">
@@ -55,24 +101,28 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
                 </Link>
               )}
             </div>
-            <MobileSiteNav accountHref={accountHref} accountLabel={accountLabel} />
+            <MobileSiteNav accountHref={accountHref} accountLabel={accountLabel} brandName={brandName} />
           </div>
         </header>
         {children}
         <footer className="site-footer">
           <div className="chrome-inner footer-inner">
             <div className="footer-brand">
-              <strong>Bella Roma</strong>
-              <span>Italian kitchen, direct online ordering, and warm neighborhood hospitality.</span>
+              <strong>{brandName}</strong>
+              <span>{tenant?.description ?? "Direct online ordering and warm hospitality."}</span>
               <div className="footer-contact">
-                <div>
-                  <p>Visit us</p>
-                  <strong>10 Market Street, London</strong>
-                </div>
-                <div>
-                  <p>Call</p>
-                  <strong>+44 20 1234 5678</strong>
-                </div>
+                {tenant?.address ? (
+                  <div>
+                    <p>Visit us</p>
+                    <strong>{tenant.address}</strong>
+                  </div>
+                ) : null}
+                {tenant?.phone ? (
+                  <div>
+                    <p>Call</p>
+                    <strong>{tenant.phone}</strong>
+                  </div>
+                ) : null}
               </div>
               <div className="footer-socials" aria-label="Social media links">
                 <a href="https://instagram.com" target="_blank" rel="noreferrer">
@@ -99,22 +149,18 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             </div>
             <div className="footer-links">
               <Link href="/menu">Menu</Link>
-              <Link href="/booking">Booking</Link>
+              {showBooking ? <Link href="/booking">Booking</Link> : null}
               <Link href="/contact">Contact</Link>
               <Link href={customerSession ? "/account" : "/login"}>Account</Link>
             </div>
             <div className="footer-meta-block">
               <div className="footer-hours" aria-label="Business hours">
                 <p>Business hours</p>
-                <div><span>Monday</span><strong>11:30 AM - 10:00 PM</strong></div>
-                <div><span>Tuesday</span><strong>11:30 AM - 10:00 PM</strong></div>
-                <div><span>Wednesday</span><strong>11:30 AM - 10:00 PM</strong></div>
-                <div><span>Thursday</span><strong>11:30 AM - 10:30 PM</strong></div>
-                <div><span>Friday</span><strong>11:30 AM - 11:00 PM</strong></div>
-                <div><span>Saturday</span><strong>12:00 PM - 11:00 PM</strong></div>
-                <div><span>Sunday</span><strong>12:00 PM - 9:30 PM</strong></div>
+                <div className="footer-hours-placeholder">
+                  <span>Check back soon for updated hours</span>
+                </div>
               </div>
-              <div className="footer-meta">© 2026 Bella Roma. All rights reserved.</div>
+              <div className="footer-meta">&copy; {new Date().getFullYear()} {brandName}. All rights reserved.</div>
             </div>
           </div>
         </footer>

@@ -7,17 +7,25 @@ const CUSTOMER_SESSION_TTL_SECONDS = 60 * 60 * 24 * 14;
 
 export type CustomerSessionPayload = {
   id: string;
+  tenantId: string;
   email: string;
   name: string;
   exp: number;
 };
 
 function getAuthSecret() {
-  return (
-    process.env.CUSTOMER_AUTH_SECRET?.trim() ||
-    process.env.AUTH_SECRET?.trim() ||
-    "bella-roma-customer-dev-secret"
-  );
+  const secret = process.env.CUSTOMER_AUTH_SECRET?.trim() || process.env.AUTH_SECRET?.trim();
+
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("CUSTOMER_AUTH_SECRET or AUTH_SECRET must be set in production.");
+    }
+
+    console.warn("[customer-auth] WARNING: Using default dev secret. Set AUTH_SECRET for production.");
+    return "bella-roma-customer-dev-secret";
+  }
+
+  return secret;
 }
 
 function textEncoder() {
@@ -67,6 +75,7 @@ function decodePayload(value: string) {
 
 export async function createCustomerSessionToken(input: {
   id: string;
+  tenantId: string;
   email: string;
   name: string;
 }) {
@@ -104,7 +113,12 @@ export async function verifyCustomerSessionToken(token: string | undefined) {
 
     const payload = decodePayload(encoded);
 
-    if (!payload.email || !payload.id || payload.exp < Math.floor(Date.now() / 1000)) {
+    if (
+      !payload.email ||
+      !payload.id ||
+      !payload.tenantId ||
+      payload.exp < Math.floor(Date.now() / 1000)
+    ) {
       return null;
     }
 

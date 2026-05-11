@@ -1,12 +1,12 @@
 import { NextRequest } from "next/server";
 
-import { getDefaultTenant } from "../../../../../../../lib/mock-data";
 import { getStoredOrderByTrackingToken } from "../../../../../../../lib/operations-store";
+import { resolvePublicTenantFromRequest } from "../../../../../../../lib/tenant-resolver";
 import { serializeOrderTracking } from "../../../../../../../lib/tracking-view";
 
 export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("token")?.trim() ?? "";
-  const tenantId = request.nextUrl.searchParams.get("tenantId")?.trim() || getDefaultTenant().id;
+  const tenantId = (await resolvePublicTenantFromRequest(request)).tenantId;
 
   if (!token) {
     return new Response("Tracking token required", { status: 400 });

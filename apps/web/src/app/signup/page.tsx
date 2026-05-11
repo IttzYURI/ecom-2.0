@@ -1,10 +1,16 @@
 import { LayoutShell } from "../../components/layout-shell";
 import { AuthPage } from "../../components/storefront";
+import { resolveTenantFromRequest } from "../../lib/tenant";
 
-export default function SignupRoute() {
+export const dynamic = "force-dynamic";
+
+export default async function SignupRoute() {
+  const tenant = await resolveTenantFromRequest();
+  const brandName = tenant?.branding?.logoText ?? tenant?.name ?? "the restaurant";
+
   return (
     <LayoutShell
-      eyebrow="Join Bella Roma"
+      eyebrow={`Join ${brandName}`}
       title="Create Account"
       subtitle="Set up a customer account to speed up future orders and track previous purchases."
     >

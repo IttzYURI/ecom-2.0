@@ -13,3 +13,4 @@ start-*.out.log
 dev-server*.log
 dev-*.log
 tmp/
+apps/print-agent/release/

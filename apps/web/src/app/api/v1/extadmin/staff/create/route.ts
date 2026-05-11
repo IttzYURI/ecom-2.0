@@ -1,23 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getExtAdminSession, requireExtAdminSession } from "../../../../../../lib/extadmin-auth";
+import { requireExtAdminPermission } from "../../../../../../lib/authz";
 import { recordAuditEntry } from "../../../../../../lib/audit-store";
 import { createStoredExtAdminUser } from "../../../../../../lib/extadmin-user-store";
 
 export async function POST(request: NextRequest) {
-  const unauthorized = await requireExtAdminSession(request);
-  if (unauthorized) {
-    return unauthorized;
+  const { session, response } = await requireExtAdminPermission(
+    request,
+    "tenant.staff.manage"
+  );
+  if (response) {
+    return response;
   }
 
   const formData = await request.formData();
-  const tenantId = String(formData.get("tenantId") ?? "tenant_bella");
+  const tenantId = session.tenantId;
   const name = String(formData.get("name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "").trim();
   const roleId = String(formData.get("roleId") ?? "role_manager").trim();
-  const session = await getExtAdminSession(request);
-
   if (!name || !email || !password) {
     return NextResponse.redirect(
       new URL("/extadmin/staff?status=error&message=Complete+all+staff+fields.", request.url)

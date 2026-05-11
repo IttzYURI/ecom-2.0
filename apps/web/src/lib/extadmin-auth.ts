@@ -1,21 +1,33 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+
+import { getRequestHostname, resolveTenantIdFromExtAdminSession } from "./tenant-host-resolver";
 
 const SESSION_COOKIE_NAME = "extadmin_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 12;
 
-type SessionPayload = {
+export type ExtAdminSessionPayload = {
+  userId: string;
   email: string;
-  role: "owner";
+  userType: "restaurant_owner" | "restaurant_staff";
+  tenantId: string;
   exp: number;
 };
 
 function getAuthSecret() {
-  return (
-    process.env.EXTADMIN_AUTH_SECRET?.trim() ||
-    process.env.AUTH_SECRET?.trim() ||
-    "bella-roma-dev-secret"
-  );
+  const secret = process.env.EXTADMIN_AUTH_SECRET?.trim() || process.env.AUTH_SECRET?.trim();
+
+  if (!secret) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("EXTADMIN_AUTH_SECRET or AUTH_SECRET must be set in production.");
+    }
+
+    console.warn("[extadmin-auth] WARNING: Using default dev secret. Set AUTH_SECRET for production.");
+    return "bella-roma-dev-secret";
+  }
+
+  return secret;
 }
 
 function textEncoder() {
@@ -55,18 +67,25 @@ async function sign(value: string) {
   return toBase64Url(new Uint8Array(signature));
 }
 
-function encodePayload(payload: SessionPayload) {
+function encodePayload(payload: ExtAdminSessionPayload) {
   return Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
 }
 
 function decodePayload(value: string) {
-  return JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as SessionPayload;
+  return JSON.parse(Buffer.from(value, "base64url").toString("utf8")) as ExtAdminSessionPayload;
 }
 
-export async function createExtAdminSessionToken(email: string) {
-  const payload: SessionPayload = {
-    email,
-    role: "owner",
+export async function createExtAdminSessionToken(input: {
+  userId: string;
+  email: string;
+  tenantId: string;
+  userType: "restaurant_owner" | "restaurant_staff";
+}) {
+  const payload: ExtAdminSessionPayload = {
+    userId: input.userId,
+    email: input.email,
+    userType: input.userType,
+    tenantId: input.tenantId,
     exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS
   };
   const encoded = encodePayload(payload);
@@ -99,7 +118,12 @@ export async function verifyExtAdminSessionToken(token: string | undefined) {
 
     const payload = decodePayload(encoded);
 
-    if (!payload.email || payload.exp < Math.floor(Date.now() / 1000)) {
+    if (
+      !payload.userId ||
+      !payload.email ||
+      !payload.tenantId ||
+      payload.exp < Math.floor(Date.now() / 1000)
+    ) {
       return null;
     }
 
@@ -109,8 +133,33 @@ export async function verifyExtAdminSessionToken(token: string | undefined) {
   }
 }
 
-export async function getExtAdminSession(request: NextRequest) {
-  return verifyExtAdminSessionToken(request.cookies.get(SESSION_COOKIE_NAME)?.value);
+export async function getExtAdminSession(
+  request: NextRequest
+): Promise<ExtAdminSessionPayload | null> {
+  const session = await verifyExtAdminSessionToken(request.cookies.get(SESSION_COOKIE_NAME)?.value);
+
+  if (!session) {
+    return null;
+  }
+
+  const tenantId = resolveTenantIdFromExtAdminSession(session, {
+    fallbackHostname: getRequestHostname(request),
+    allowDefaultFallback: true
+  });
+
+  if (!tenantId) {
+    return null;
+  }
+
+  return {
+    ...session,
+    tenantId
+  };
+}
+
+export async function getExtAdminSessionFromCookieStore() {
+  const cookieStore = await cookies();
+  return verifyExtAdminSessionToken(cookieStore.get(SESSION_COOKIE_NAME)?.value);
 }
 
 export function getExtAdminCookieOptions() {
@@ -135,6 +184,22 @@ export async function requireExtAdminSession(request: NextRequest) {
   }
 
   return NextResponse.redirect(new URL("/extadmin/login", request.url));
+}
+
+export async function requireResolvedExtAdminSession(request: NextRequest) {
+  const session = await getExtAdminSession(request);
+
+  if (session) {
+    return {
+      session,
+      unauthorized: null
+    };
+  }
+
+  return {
+    session: null,
+    unauthorized: NextResponse.redirect(new URL("/extadmin/login", request.url))
+  };
 }
 
 export { SESSION_COOKIE_NAME };

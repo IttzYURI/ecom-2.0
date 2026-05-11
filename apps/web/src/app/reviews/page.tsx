@@ -1,20 +1,27 @@
+import { FeatureGate } from "../../components/feature-gate";
 import { LayoutShell } from "../../components/layout-shell";
 import { ReviewsPage } from "../../components/storefront";
-import { getRuntimeTenantBundle } from "../../lib/content-store";
-import { getDefaultTenant } from "../../lib/mock-data";
+import { TenantUnavailablePage } from "../../components/tenant-unavailable";
+import { resolvePublicTenantBundle } from "../../lib/tenant";
 
 export const dynamic = "force-dynamic";
 
 export default async function ReviewsRoute() {
-  const bundle = await getRuntimeTenantBundle(getDefaultTenant().id);
+  const { bundle, status, features } = await resolvePublicTenantBundle();
+
+  if (status !== "active") {
+    return <TenantUnavailablePage status={status} />;
+  }
 
   return (
-    <LayoutShell
-      eyebrow="Guest feedback"
-      title="Reviews"
-      subtitle="Real guest feedback that helps new customers trust the experience."
-    >
-      <ReviewsPage bundle={bundle} />
-    </LayoutShell>
+    <FeatureGate features={features} flag="reviews">
+      <LayoutShell
+        eyebrow="Guest feedback"
+        title="Reviews"
+        subtitle="Real guest feedback that helps new customers trust the experience."
+      >
+        <ReviewsPage bundle={bundle} />
+      </LayoutShell>
+    </FeatureGate>
   );
 }

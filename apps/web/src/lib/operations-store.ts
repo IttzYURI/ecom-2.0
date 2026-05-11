@@ -85,6 +85,19 @@ async function persistOperationsContent(
   await writeOperationsStore(store);
 }
 
+export async function replaceStoredOperationsContent(
+  tenantId: string,
+  nextValue: {
+    orders: Order[];
+    bookings: Booking[];
+  }
+) {
+  await persistOperationsContent(tenantId, {
+    orders: normalizeOrders(nextValue.orders),
+    bookings: nextValue.bookings
+  });
+}
+
 export async function getStoredOperationsContent(tenantId: string) {
   const mongoOperations = await getTenantDocument<{
     orders: Order[];

@@ -3,10 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { createStoredInquiry } from "../../../../../lib/inquiries-store";
 import { sendEmailNotification } from "../../../../../lib/notifications";
 import { getStoredTenantSettings } from "../../../../../lib/settings-store";
+import { resolvePublicTenantFromRequest } from "../../../../../lib/tenant-resolver";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const tenantId = body.tenantId ?? "tenant_bella";
+  const tenantId = (await resolvePublicTenantFromRequest(request)).tenantId;
   const name = String(body.name ?? "").trim();
   const email = String(body.email ?? "").trim();
   const message = String(body.message ?? "").trim();

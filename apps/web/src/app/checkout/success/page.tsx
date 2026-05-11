@@ -17,8 +17,6 @@ export default async function CheckoutSuccessPage({
   return (
     <LayoutShell
       eyebrow="Order confirmed"
-      title=" "
-      subtitle="The restaurant has received your order and will prepare it shortly."
       showHero={false}
     >
       <section className="checkout-success-shell">

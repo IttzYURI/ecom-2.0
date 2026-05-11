@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireExtAdminSession } from "../../../../../lib/extadmin-auth";
+import { requireExtAdminPermission } from "../../../../../lib/authz";
 import { updateStoredReviews } from "../../../../../lib/reviews-store";
 
 export async function POST(request: NextRequest) {
-  const unauthorized = await requireExtAdminSession(request);
-  if (unauthorized) {
-    return unauthorized;
+  const { session, response } = await requireExtAdminPermission(
+    request,
+    "tenant.reviews.write"
+  );
+  if (response) {
+    return response;
   }
 
   const formData = await request.formData();
-  const tenantId = String(formData.get("tenantId") ?? "tenant_bella");
+  const tenantId = session.tenantId;
 
   const reviews = Array.from({ length: 4 }, (_, index) => ({
     id: String(formData.get(`reviewId_${index}`) ?? `review_${index + 1}`),

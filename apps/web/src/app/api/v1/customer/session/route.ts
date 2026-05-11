@@ -25,6 +25,7 @@ export async function GET(request: NextRequest) {
     data: {
       user: {
         id: session.id,
+        tenantId: session.tenantId,
         email: session.email,
         name: session.name
       }

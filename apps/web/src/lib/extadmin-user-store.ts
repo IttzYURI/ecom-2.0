@@ -4,8 +4,9 @@ import path from "node:path";
 import type { StaffMember } from "@rcc/contracts";
 
 import { getMongoDb, isMongoConfigured } from "./mongo";
-import { getDefaultStaff, getDefaultTenant } from "./mock-data";
+import { getDefaultStaff, getDefaultTenant, getDefaultTenantCopy } from "./mock-data";
 import { hashPassword, verifyPassword } from "./password";
+import { getStoredTenantSettings } from "./settings-store";
 
 export type ExtAdminUserRecord = {
   id: string;
@@ -27,13 +28,41 @@ function createId(prefix: string) {
   return `${prefix}_${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function getSeedOwnerDefaults() {
+function hasMockTenantSeed(tenantId: string) {
+  try {
+    getDefaultTenantCopy(tenantId);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function getSeedOwnerDefaults(tenantId: string) {
+  const tenant = (() => {
+    try {
+      return Promise.resolve(getDefaultTenantCopy(tenantId));
+    } catch {
+      return getStoredTenantSettings(tenantId);
+    }
+  })();
+  const resolvedTenant = await tenant;
+  const normalizedTenantSlug = resolvedTenant.slug.replace(/[^a-z0-9]/gi, "").toLowerCase();
+  const isDefaultTenant = tenantId === getDefaultTenant().id;
+
   return {
     id: "staff_owner",
-    tenantId: getDefaultTenant().id,
-    email: process.env.EXTADMIN_EMAIL?.trim() || "owner@bellaroma.test",
+    tenantId,
+    email:
+      process.env.EXTADMIN_EMAIL?.trim() && isDefaultTenant
+        ? process.env.EXTADMIN_EMAIL.trim()
+        : isDefaultTenant
+          ? "owner@bellaroma.test"
+          : `owner@${normalizedTenantSlug || tenantId}.test`,
     password: process.env.EXTADMIN_PASSWORD?.trim() || "demo1234",
-    name: process.env.EXTADMIN_NAME?.trim() || "Bella Roma Owner",
+    name:
+      process.env.EXTADMIN_NAME?.trim() && isDefaultTenant
+        ? process.env.EXTADMIN_NAME.trim()
+        : `${resolvedTenant.name} Owner`,
     roleIds: ["role_owner"]
   };
 }
@@ -58,7 +87,7 @@ function mapUserToStaffMember(user: ExtAdminUserRecord): StaffMember {
 }
 
 async function buildSeedUsers(tenantId: string) {
-  const owner = getSeedOwnerDefaults();
+  const owner = await getSeedOwnerDefaults(tenantId);
   const defaultStaff = getDefaultStaff(tenantId);
   const seedUsers: ExtAdminUserRecord[] = [
     {
@@ -123,9 +152,7 @@ async function getUsersCollection() {
   return db.collection<ExtAdminUserRecord>("extadmin_users");
 }
 
-export async function ensureDefaultExtAdminUsers() {
-  const tenantId = getDefaultTenant().id;
-
+export async function ensureDefaultExtAdminUsers(tenantId = getDefaultTenant().id) {
   if (!isMongoConfigured()) {
     await ensureUsersStoreFile();
     return getStoredExtAdminUsers(tenantId);
@@ -138,6 +165,10 @@ export async function ensureDefaultExtAdminUsers() {
     return collection.find({ tenantId }).sort({ createdAt: 1 }).toArray();
   }
 
+  if (!hasMockTenantSeed(tenantId)) {
+    return [];
+  }
+
   const seedUsers = await buildSeedUsers(tenantId);
   await collection.insertMany(seedUsers);
   return seedUsers;
@@ -145,7 +176,7 @@ export async function ensureDefaultExtAdminUsers() {
 
 export async function getStoredExtAdminUsers(tenantId: string) {
   if (isMongoConfigured()) {
-    await ensureDefaultExtAdminUsers();
+    await ensureDefaultExtAdminUsers(tenantId);
     const collection = await getUsersCollection();
     const users = await collection.find({ tenantId }).sort({ createdAt: 1 }).toArray();
     return users.map((user) => ({
@@ -155,7 +186,9 @@ export async function getStoredExtAdminUsers(tenantId: string) {
   }
 
   const store = await readUsersStore();
-  return (store[tenantId] ?? (await buildSeedUsers(tenantId))).map((user) => ({
+  const fallbackUsers = hasMockTenantSeed(tenantId) ? await buildSeedUsers(tenantId) : [];
+
+  return (store[tenantId] ?? fallbackUsers).map((user) => ({
     ...user,
     orderEmailsEnabled: normalizeOrderEmailsEnabled(user)
   }));
@@ -179,6 +212,7 @@ export async function createStoredExtAdminUser(
     email: string;
     password: string;
     roleIds: string[];
+    orderEmailsEnabled?: boolean;
   }
 ) {
   const existing = await findStoredExtAdminUserByEmail(tenantId, input.email);
@@ -195,13 +229,16 @@ export async function createStoredExtAdminUser(
     passwordHash: await hashPassword(input.password),
     roleIds: input.roleIds,
     name: input.name.trim(),
-    orderEmailsEnabled: false,
+    orderEmailsEnabled:
+      typeof input.orderEmailsEnabled === "boolean"
+        ? input.orderEmailsEnabled
+        : input.roleIds.includes("role_owner"),
     createdAt: now,
     updatedAt: now
   };
 
   if (isMongoConfigured()) {
-    await ensureDefaultExtAdminUsers();
+    await ensureDefaultExtAdminUsers(tenantId);
     const collection = await getUsersCollection();
     await collection.insertOne(user);
     return user;
@@ -215,7 +252,7 @@ export async function createStoredExtAdminUser(
 }
 
 export async function deleteStoredExtAdminUser(tenantId: string, userId: string) {
-  const ownerId = getSeedOwnerDefaults().id;
+  const ownerId = (await getSeedOwnerDefaults(tenantId)).id;
 
   if (userId === ownerId) {
     return false;
@@ -307,19 +344,34 @@ export async function updateStoredExtAdminUserOrderEmails(
   await writeUsersStore(store);
 }
 
-export async function validateExtAdminUser(email: string, password: string) {
+export async function validateExtAdminUser(email: string, password: string, tenantId: string) {
+  const user = await validateExtAdminCredentials(email, password, tenantId);
+  return Boolean(user);
+}
+
+export async function validateExtAdminCredentials(
+  email: string,
+  password: string,
+  tenantId: string
+) {
   const normalizedEmail = email.trim().toLowerCase();
-  const users = await getStoredExtAdminUsers(getDefaultTenant().id);
+  const users = await getStoredExtAdminUsers(tenantId);
   const owner = users.find((entry) => entry.email === normalizedEmail);
 
   if (!owner) {
-    return false;
+    return null;
   }
 
-  return verifyPassword(password, owner.passwordHash);
+  const valid = await verifyPassword(password, owner.passwordHash);
+  return valid ? owner : null;
 }
 
 export async function getStoredExtAdminUserById(tenantId: string, userId: string) {
   const users = await getStoredExtAdminUsers(tenantId);
   return users.find((entry) => entry.id === userId) ?? null;
+}
+
+export async function getStoredTenantOwnerUser(tenantId: string) {
+  const users = await getStoredExtAdminUsers(tenantId);
+  return users.find((entry) => entry.roleIds.includes("role_owner")) ?? null;
 }

@@ -1,7 +1,9 @@
+import { redirect } from "next/navigation";
+
 import { ExtAdminShell, ExtAdminStaffPage } from "../../../components/extadmin";
 import { listAuditEntries } from "../../../lib/audit-store";
 import { getRuntimeTenantBundle } from "../../../lib/content-store";
-import { getDefaultTenant } from "../../../lib/mock-data";
+import { getExtAdminSessionFromCookieStore } from "../../../lib/extadmin-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +12,13 @@ export default async function ExtAdminStaffRoute({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const tenantId = getDefaultTenant().id;
+  const session = await getExtAdminSessionFromCookieStore();
+
+  if (!session) {
+    redirect("/extadmin/login");
+  }
+
+  const tenantId = session.tenantId;
   const bundle = await getRuntimeTenantBundle(tenantId);
   const auditEntries = await listAuditEntries(tenantId, 10);
   const params = await searchParams;

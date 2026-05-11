@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { DriverConsole } from "../../components/driver-console";
 import { LayoutShell } from "../../components/layout-shell";
+import { filterOrdersForDriver } from "../../lib/authz";
 import { getDriverSessionFromCookieStore } from "../../lib/driver-auth";
 import { getStoredDrivers } from "../../lib/driver-store";
 import { getStoredOperationsContent } from "../../lib/operations-store";
@@ -28,7 +29,10 @@ export default async function DriverPage() {
       title="Delivery console"
       subtitle="Accept assignments, share approximate live location, and keep milestones current."
     >
-      <DriverConsole driver={driver} orders={operations.orders} />
+      <DriverConsole
+        driver={driver}
+        orders={filterOrdersForDriver(operations.orders, session.driverId)}
+      />
     </LayoutShell>
   );
 }

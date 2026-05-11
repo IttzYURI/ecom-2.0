@@ -1,17 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { requireExtAdminSession } from "../../../../../../lib/extadmin-auth";
+import { requireExtAdminPermission } from "../../../../../../lib/authz";
 import { assignStoredOrderDriver } from "../../../../../../lib/operations-store";
 
 export async function POST(request: NextRequest) {
-  const unauthorized = await requireExtAdminSession(request);
+  const { session, response } = await requireExtAdminPermission(
+    request,
+    "tenant.orders.assign_driver"
+  );
 
-  if (unauthorized) {
-    return unauthorized;
+  if (response) {
+    return response;
   }
 
   const formData = await request.formData();
-  const tenantId = String(formData.get("tenantId") ?? "tenant_bella");
+  const tenantId = session.tenantId;
   const orderId = String(formData.get("orderId") ?? "");
   const driverId = String(formData.get("driverId") ?? "");
   const etaMinutesRaw = String(formData.get("etaMinutes") ?? "").trim();

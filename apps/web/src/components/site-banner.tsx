@@ -1,9 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+const BANNER_KEY = "bella-roma-banner-dismissed";
 
 export function SiteBanner() {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    setIsVisible(!sessionStorage.getItem(BANNER_KEY));
+  }, []);
 
   if (!isVisible) {
     return null;
@@ -16,7 +22,10 @@ export function SiteBanner() {
         type="button"
         className="site-banner-close"
         aria-label="Dismiss announcement"
-        onClick={() => setIsVisible(false)}
+        onClick={() => {
+          sessionStorage.setItem(BANNER_KEY, "1");
+          setIsVisible(false);
+        }}
       >
         ×
       </button>

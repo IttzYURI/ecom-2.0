@@ -627,14 +627,14 @@ export function getTenantBundle(
   menuItemsOverride?: MenuItem[],
   tenantOverride?: Tenant
 ): TenantBundle {
-  const tenant = tenants.find((entry) => entry.id === tenantId);
+  const tenant = tenantOverride ?? tenants.find((entry) => entry.id === tenantId);
 
   if (!tenant) {
     throw new Error(`Unknown tenant: ${tenantId}`);
   }
 
   return {
-    tenant: tenantOverride ?? tenant,
+    tenant,
     content: contentOverride ?? storefrontContent[tenantId],
     categories: categoriesOverride ?? categories.filter((entry) => entry.tenantId === tenantId),
     optionGroups: optionGroups.filter((entry) => entry.tenantId === tenantId),

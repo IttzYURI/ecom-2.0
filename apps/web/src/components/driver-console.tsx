@@ -12,13 +12,7 @@ type DriverConsoleProps = {
   orders: Order[];
 };
 
-function DriverLocationControl({
-  orderId,
-  driverId
-}: {
-  orderId: string;
-  driverId: string;
-}) {
+function DriverLocationControl({ orderId }: { orderId: string }) {
   const [sharing, setSharing] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -33,7 +27,6 @@ function DriverLocationControl({
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            driverId,
             lat: position.coords.latitude,
             lng: position.coords.longitude,
             accuracyMeters: position.coords.accuracy
@@ -55,7 +48,7 @@ function DriverLocationControl({
     return () => {
       navigator.geolocation.clearWatch(watchId);
     };
-  }, [driverId, orderId, sharing]);
+  }, [orderId, sharing]);
 
   return (
     <div className="driver-location-control">
@@ -143,7 +136,6 @@ export function DriverConsole({ driver, orders }: DriverConsoleProps) {
                     method="post"
                     className="inline-status-form"
                   >
-                    <input type="hidden" name="driverId" value={driver.id} />
                     <input type="hidden" name="deliveryStatus" value={status} />
                     <button type="submit" className="button-ghost compact-button" disabled={isPending}>
                       {status.replaceAll("_", " ")}
@@ -152,7 +144,7 @@ export function DriverConsole({ driver, orders }: DriverConsoleProps) {
                 ))}
               </div>
 
-              <DriverLocationControl orderId={order.id} driverId={driver.id} />
+              <DriverLocationControl orderId={order.id} />
             </article>
           ))}
         </div>

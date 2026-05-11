@@ -8,9 +8,13 @@
   ],
   "scripts": {
     "dev": "npm run dev --workspace @rcc/web",
+    "dev:print-agent": "npm run dev --workspace @rcc/print-agent",
     "build": "npm run build --workspace @rcc/web",
+    "build:print-agent": "npm run build --workspace @rcc/print-agent",
     "start": "npm run start --workspace @rcc/web",
+    "package:print-agent": "npm run package:win --workspace @rcc/print-agent",
     "lint": "npm run lint --workspace @rcc/web",
-    "typecheck": "npm run typecheck --workspace @rcc/web"
+    "typecheck": "npm run typecheck --workspace @rcc/web",
+    "test": "npm run test --workspace @rcc/web"
   }
 }

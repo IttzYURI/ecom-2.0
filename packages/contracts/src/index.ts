@@ -1,10 +1,13 @@
 export type TenantStatus = "active" | "suspended" | "archived";
 export type FulfillmentType = "delivery" | "collection";
+export type PaymentMethod = "cash" | "stripe";
 export type OrderStatus =
   | "pending_payment"
   | "placed"
   | "accepted"
   | "preparing"
+  | "ready"
+  | "out_for_delivery"
   | "completed"
   | "cancelled"
   | "refunded";
@@ -17,6 +20,16 @@ export type DeliveryStatus =
   | "delivery_failed";
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 export type BookingStatus = "pending" | "accepted" | "rejected" | "cancelled";
+export type PrintPaperWidth = "58mm" | "80mm";
+export type PrintJobStatus =
+  | "pending"
+  | "claimed"
+  | "printing"
+  | "printed"
+  | "failed"
+  | "cancelled";
+export type PrintCopyType = "kitchen" | "receipt" | "dispatch";
+export type PrintTriggerType = "auto" | "manual_reprint";
 export type DeliveryTrackingEventType =
   | "order_confirmed"
   | "preparing"
@@ -34,6 +47,7 @@ export interface TenantBranding {
   accentColor: string;
   logoText: string;
   heroImage: string;
+  logoUrl?: string;
 }
 
 export interface Tenant {
@@ -168,6 +182,20 @@ export interface DeliveryTracking {
   lastUpdatedAt: string;
 }
 
+export interface OrderPrintState {
+  orderId: string;
+  tenantId: string;
+  hasKitchenPrint: boolean;
+  firstPrintedAt?: string;
+  lastPrintedAt?: string;
+  printCount: number;
+  reprintCount: number;
+  lastPrintJobId?: string;
+  lastStationId?: string;
+  lastPrintStatus?: PrintJobStatus;
+  lastPrintError?: string;
+}
+
 export interface Order {
   id: string;
   tenantId: string;
@@ -184,8 +212,122 @@ export interface Order {
   total: number;
   orderStatus: OrderStatus;
   paymentStatus: PaymentStatus;
+  paymentMethod?: PaymentMethod;
+  printState?: OrderPrintState;
   deliveryTracking?: DeliveryTracking | null;
   createdAt: string;
+}
+
+export interface PrintStation {
+  id: string;
+  tenantId: string;
+  name: string;
+  tokenHash: string;
+  enabled: boolean;
+  deviceId?: string;
+  printerName?: string;
+  paperWidth: PrintPaperWidth;
+  autoPrintEnabled: boolean;
+  appVersion?: string;
+  createdAt: string;
+  updatedAt: string;
+  lastSeenAt?: string;
+  lastActivityAt?: string;
+  lastActivityMessage?: string;
+}
+
+export interface PrintJobPayload {
+  restaurantName: string;
+  tenantId: string;
+  orderId: string;
+  orderNumber: string;
+  createdAt: string;
+  fulfillmentType: FulfillmentType;
+  paymentMethod?: PaymentMethod;
+  paymentStatus: PaymentStatus;
+  orderStatus: OrderStatus;
+  customerName: string;
+  customerPhone: string;
+  customerEmail?: string;
+  address?: string;
+  items: OrderLine[];
+  subtotal: number;
+  deliveryFee: number;
+  discount: number;
+  total: number;
+  printCount: number;
+  stationName?: string;
+}
+
+export interface PrintJob {
+  id: string;
+  tenantId: string;
+  orderId: string;
+  orderNumber: string;
+  jobKey: string;
+  stationId?: string;
+  copyType: PrintCopyType;
+  triggerType: PrintTriggerType;
+  status: PrintJobStatus;
+  attemptCount: number;
+  copiesPrinted: number;
+  lastError?: string;
+  printerName?: string;
+  claimedAt?: string;
+  startedPrintingAt?: string;
+  printedAt?: string;
+  lastFailedAt?: string;
+  nextRetryAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy?: string;
+  payload: PrintJobPayload;
+}
+
+export interface RegisterPrintStationRequest {
+  tenantId: string;
+  name: string;
+  deviceId?: string;
+  printerName?: string;
+  paperWidth?: PrintPaperWidth;
+  autoPrintEnabled?: boolean;
+}
+
+export interface RegisterPrintStationResponse {
+  stationId: string;
+  token: string;
+  name: string;
+}
+
+export interface PrintStationHeartbeatRequest {
+  printerName?: string;
+  paperWidth?: PrintPaperWidth;
+  appVersion?: string;
+  autoPrintEnabled?: boolean;
+  lastActivityMessage?: string;
+}
+
+export interface PrintStationHeartbeatResponse {
+  stationId: string;
+  serverTime: string;
+}
+
+export interface PrintJobAckRequest {
+  stationId?: string;
+}
+
+export interface PrintJobPrintedRequest {
+  printerName?: string;
+  copiesPrinted?: number;
+}
+
+export interface PrintJobFailedRequest {
+  error: string;
+}
+
+export interface ReprintOrderRequest {
+  copyType?: PrintCopyType;
+  reason?: string;
 }
 
 export interface Role {

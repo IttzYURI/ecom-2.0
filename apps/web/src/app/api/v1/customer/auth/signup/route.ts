@@ -6,10 +6,11 @@ import {
   getCustomerCookieOptions
 } from "../../../../../../lib/customer-auth";
 import { createStoredCustomerUser } from "../../../../../../lib/customer-user-store";
+import { resolvePublicTenantFromRequest } from "../../../../../../lib/tenant-resolver";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
-  const tenantId = body.tenantId ?? "tenant_bella";
+  const tenantId = (await resolvePublicTenantFromRequest(request)).tenantId;
   const name = String(body.name ?? "").trim();
   const email = String(body.email ?? "").trim();
   const password = String(body.password ?? "");
@@ -67,6 +68,7 @@ export async function POST(request: NextRequest) {
       CUSTOMER_SESSION_COOKIE_NAME,
       await createCustomerSessionToken({
         id: user.id,
+        tenantId,
         email: user.email,
         name: user.name
       }),

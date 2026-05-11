@@ -1,76 +1,221 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { calculateOrder, generateOrderNumber } from "../../../../../lib/checkout-calculator";
+import { isTenantAcceptingOrders, requireTenantFeature } from "../../../../../lib/feature-gating";
 import { getStoredExtAdminUsers } from "../../../../../lib/extadmin-user-store";
 import { getStoredMenuContent } from "../../../../../lib/menu-store";
 import { createStoredOrder } from "../../../../../lib/operations-store";
+import { ensureAutoPrintJobForOrder } from "../../../../../lib/printing-service";
 import { sendEmailNotification } from "../../../../../lib/notifications";
 import { getStoredTenantSettings } from "../../../../../lib/settings-store";
+import { getTenantSetupRecord } from "../../../../../lib/tenant-setup-store";
+import { resolvePublicTenantFromRequest } from "../../../../../lib/tenant-resolver";
 
 export async function POST(request: NextRequest) {
   const body = await request.json();
   const appOrigin = request.nextUrl.origin;
-  const tenantId = body.tenantId ?? "tenant_bella";
-  const menu = await getStoredMenuContent(tenantId);
-  const tenant = await getStoredTenantSettings(tenantId);
-  const extAdminUsers = await getStoredExtAdminUsers(tenantId);
-  const requestedItems = Array.isArray(body.items) ? body.items : [];
+  const tenantId = (await resolvePublicTenantFromRequest(request)).tenantId;
 
-  const orderItems = requestedItems
-    .map((line: { menuItemId?: string; quantity?: number }) => {
-      const menuItem = menu.menuItems.find((item) => item.id === line.menuItemId);
+  const { accepting, reason } = await isTenantAcceptingOrders(tenantId);
 
-      if (!menuItem) {
-        return null;
-      }
-
-      return {
-        menuItemId: menuItem.id,
-        name: menuItem.name,
-        quantity: Math.max(1, Number(line.quantity ?? 1)),
-        unitPrice: menuItem.basePrice,
-        selectedOptions: []
-      };
-    })
-    .filter(Boolean);
-
-  if (!orderItems.length) {
+  if (!accepting) {
     return NextResponse.json(
       {
         success: false,
         data: null,
         meta: {},
         error: {
-          code: "CHECKOUT_ITEMS_REQUIRED",
-          message: "At least one valid menu item is required."
+          code: reason ?? "ORDERS_DISABLED",
+          message: reason === "SUBSCRIPTION_INACTIVE"
+            ? "This restaurant's subscription is not active."
+            : "Online ordering is currently disabled for this restaurant."
         }
+      },
+      { status: 403 }
+    );
+  }
+
+  const [menu, tenant, extAdminUsers, setup] = await Promise.all([
+    getStoredMenuContent(tenantId),
+    getStoredTenantSettings(tenantId),
+    getStoredExtAdminUsers(tenantId),
+    getTenantSetupRecord(tenantId)
+  ]);
+
+  const fulfillmentType = body.fulfillmentType === "collection" ? "collection" : "delivery";
+
+  if (setup && fulfillmentType === "delivery" && !setup.deliveryEnabled) {
+    return NextResponse.json(
+      {
+        success: false,
+        data: null,
+        meta: {},
+        error: { code: "DELIVERY_DISABLED", message: "Delivery is not enabled for this restaurant." }
       },
       { status: 400 }
     );
   }
 
-  const subtotal = orderItems.reduce(
-    (sum: number, item: { unitPrice: number; quantity: number }) =>
-      sum + item.unitPrice * item.quantity,
-    0
-  );
-  const deliveryFee = body.fulfillmentType === "delivery" ? 3.5 : 0;
-  const paymentMethod = body.paymentMethod === "cash" ? "cash" : "stripe";
-  const orderNumber = `BR-${Math.floor(1000 + Math.random() * 9000)}`;
+  if (setup && fulfillmentType === "collection" && !setup.collectionEnabled) {
+    return NextResponse.json(
+      {
+        success: false,
+        data: null,
+        meta: {},
+        error: { code: "COLLECTION_DISABLED", message: "Collection is not enabled for this restaurant." }
+      },
+      { status: 400 }
+    );
+  }
+
+  const requestedPaymentMethod = body.paymentMethod === "cash" ? "cash" : "stripe";
+
+  if (requestedPaymentMethod === "cash") {
+    const { allowed } = await requireTenantFeature(tenantId, "cashPayment");
+
+    if (!allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          meta: {},
+          error: { code: "CASH_PAYMENT_DISABLED", message: "Cash payment is not enabled for this restaurant." }
+        },
+        { status: 400 }
+      );
+    }
+  }
+
+  if (requestedPaymentMethod === "stripe") {
+    const { allowed } = await requireTenantFeature(tenantId, "cardPayment");
+
+    if (!allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          data: null,
+          meta: {},
+          error: { code: "CARD_PAYMENT_DISABLED", message: "Card payment is not enabled for this restaurant." }
+        },
+        { status: 400 }
+      );
+    }
+  }
+
+  const customerName = String(body.customer?.name ?? "").trim();
+  const customerEmail = String(body.customer?.email ?? "").trim();
+  const customerPhone = String(body.customer?.phone ?? "").trim();
+
+  if (!customerName || customerName.length < 2) {
+    return NextResponse.json(
+      {
+        success: false,
+        data: null,
+        meta: {},
+        error: { code: "CUSTOMER_NAME_REQUIRED", message: "Customer name is required." }
+      },
+      { status: 400 }
+    );
+  }
+
+  if (!customerEmail || !customerEmail.includes("@")) {
+    return NextResponse.json(
+      {
+        success: false,
+        data: null,
+        meta: {},
+        error: { code: "CUSTOMER_EMAIL_REQUIRED", message: "A valid customer email is required." }
+      },
+      { status: 400 }
+    );
+  }
+
+  const requestedItems: Array<{ menuItemId?: string; quantity?: number }> = Array.isArray(body.items) ? body.items : [];
+
+  if (!requestedItems.length) {
+    return NextResponse.json(
+      {
+        success: false,
+        data: null,
+        meta: {},
+        error: { code: "CHECKOUT_ITEMS_REQUIRED", message: "At least one menu item is required." }
+      },
+      { status: 400 }
+    );
+  }
+
+  const validatedItems = requestedItems
+    .map((line) => {
+      const menuItem = menu.menuItems.find((item) => item.id === line.menuItemId);
+      if (!menuItem) {
+        return null;
+      }
+      if (!menuItem.available) {
+        return null;
+      }
+      const quantity = Math.max(1, Math.min(99, Number(line.quantity ?? 1)));
+      if (!Number.isFinite(quantity)) {
+        return null;
+      }
+      return { menuItem, quantity };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+
+  if (!validatedItems.length) {
+    return NextResponse.json(
+      {
+        success: false,
+        data: null,
+        meta: {},
+        error: { code: "CHECKOUT_ITEMS_UNAVAILABLE", message: "None of the selected items are currently available." }
+      },
+      { status: 400 }
+    );
+  }
+
+  const deliveryFee = fulfillmentType === "delivery" ? (setup?.deliveryFee ?? 0) : 0;
+  const calculated = calculateOrder({
+    items: validatedItems,
+    fulfillmentType,
+    deliveryFee
+  });
+
+  const minimumOrderAmount = setup?.minimumOrderAmount ?? 0;
+
+  if (calculated.subtotal < minimumOrderAmount) {
+    return NextResponse.json(
+      {
+        success: false,
+        data: null,
+        meta: {},
+        error: { code: "MINIMUM_ORDER_NOT_MET", message: `Minimum order amount is ${minimumOrderAmount.toFixed(2)}.` }
+      },
+      { status: 400 }
+    );
+  }
+
+  const orderNumber = generateOrderNumber(tenant.name);
+  const paymentMethod = requestedPaymentMethod;
   const order = await createStoredOrder(tenantId, {
     orderNumber,
-    customerName: body.customer?.name ?? "Guest Customer",
-    customerEmail: body.customer?.email ?? "guest@example.com",
-    customerPhone: body.customer?.phone ?? "",
-    fulfillmentType: body.fulfillmentType === "collection" ? "collection" : "delivery",
-    address: body.address?.line1 ?? "",
-    items: orderItems,
-    subtotal,
-    deliveryFee,
-    discount: 0,
-    total: subtotal + deliveryFee,
+    customerName,
+    customerEmail,
+    customerPhone,
+    fulfillmentType,
+    address: fulfillmentType === "delivery" ? (body.address?.line1 ?? "") : "",
+    items: calculated.lines,
+    subtotal: calculated.subtotal,
+    deliveryFee: calculated.deliveryFee,
+    discount: calculated.discount,
+    total: calculated.total,
     orderStatus: paymentMethod === "cash" ? "placed" : "pending_payment",
-    paymentStatus: "pending"
+    paymentStatus: "pending",
+    paymentMethod
   });
+
+  if (paymentMethod === "cash") {
+    await ensureAutoPrintJobForOrder(tenantId, order.id);
+  }
 
   const orderEmailRecipients = extAdminUsers.filter((user) => user.orderEmailsEnabled);
   const trackingLink =
@@ -94,15 +239,17 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  if (trackingLink && order.customerEmail) {
+  if (order.customerEmail) {
     await sendEmailNotification({
       tenantId,
       to: order.customerEmail,
-      subject: `[${tenant.name}] Track your delivery order ${order.orderNumber}`,
+      subject: `[${tenant.name}] Your order ${order.orderNumber} is confirmed`,
       text: [
         `Thanks for ordering from ${tenant.name}.`,
         `Order number: ${order.orderNumber}`,
-        `Track delivery: ${trackingLink}`
+        `Fulfillment: ${order.fulfillmentType === "delivery" ? "Delivery" : "Collection"}`,
+        `Total: ${order.total.toFixed(2)}`,
+        trackingLink ? `Track delivery: ${trackingLink}` : null
       ].join("\n")
     });
   }
@@ -115,6 +262,7 @@ export async function POST(request: NextRequest) {
         orderNumber: order.orderNumber,
         status: order.orderStatus,
         total: order.total,
+        totalMinor: Math.round(order.total * 100),
         fulfillmentType: order.fulfillmentType,
         trackingToken: order.deliveryTracking?.trackingToken ?? null,
         trackingLink

@@ -46,12 +46,7 @@ function MenuHighlight({ item }: { item: MenuItem }) {
           {item.bestSeller ? <span className="chip">Best seller</span> : null}
         </div>
         <div className="menu-card-actions">
-          <Link href="/cart" className="button-ghost compact-button menu-order-button">
-            Add to order
-          </Link>
-          <Link href="/menu" className="text-link">
-            Customize
-          </Link>
+          <AddToCartButton menuItemId={item.id} />
         </div>
       </div>
     </article>
@@ -103,7 +98,7 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
               <span className="hero-status-dot" aria-hidden="true" />
               <span>Open now</span>
             </div>
-            <p className="eyebrow">Contemporary Italian dining</p>
+            <p className="eyebrow">Contemporary {bundle.tenant.cuisine} dining</p>
             <h1>
               Savor every
               <br />
@@ -114,7 +109,7 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
           </div>
           <div className="storefront-hero-support">
             <p className="hero-lead">
-              Bella Roma brings together warm hospitality, elegant plating, and direct
+              {bundle.tenant.name} brings together warm hospitality, elegant plating, and direct
               online ordering for guests who want the restaurant experience before the
               first bite arrives.
             </p>
@@ -265,7 +260,7 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
           />
           <div className="reservation-banner-card">
             <p className="eyebrow">Reserve your table</p>
-            <h3>Book an evening built around the full Bella Roma experience</h3>
+            <h3>Book an evening built around the full {bundle.tenant.name} experience</h3>
             <Link href="/booking" className="button-primary block-button">
               Book now
             </Link>
