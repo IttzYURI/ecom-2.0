@@ -68,64 +68,6 @@
         "custom_domains"
       ],
       "source": "platform"
-    },
-    "tenant_testshop_com": {
-      "tenant": {
-        "id": "tenant_testshop_com",
-        "slug": "testshop-com",
-        "name": "test shop",
-        "status": "active",
-        "legalName": "test shop",
-        "supportEmail": "test@test.com",
-        "supportPhone": "+8801837624190",
-        "timezone": "Europe/London",
-        "currencyCode": "GBP",
-        "countryCode": "GB",
-        "createdAt": "2026-04-25T02:50:25.203Z",
-        "updatedAt": "2026-04-25T02:50:25.203Z"
-      },
-      "domains": [
-        {
-          "id": "domain_tenant_testshop_com",
-          "tenantId": "tenant_testshop_com",
-          "domain": "testshop-com.platform.test",
-          "domainType": "subdomain",
-          "isPrimary": true,
-          "verificationStatus": "verified",
-          "sslStatus": "active",
-          "createdAt": "2026-04-25T02:50:25.203Z",
-          "updatedAt": "2026-04-25T02:50:25.203Z"
-        }
-      ],
-      "subscription": {
-        "id": "sub_tenant_testshop_com_f226899c",
-        "tenantId": "tenant_testshop_com",
-        "provider": "stripe",
-        "providerCustomerId": null,
-        "providerSubscriptionId": null,
-        "planCode": "starter",
-        "status": "active",
-        "billingInterval": "monthly",
-        "trialEndsAt": null,
-        "currentPeriodStartsAt": null,
-        "currentPeriodEndsAt": null,
-        "cancelAtPeriodEnd": false,
-        "cancelledAt": null,
-        "createdAt": "2026-04-25T02:50:25.267Z",
-        "updatedAt": "2026-04-25T02:50:25.267Z"
-      },
-      "features": [
-        "storefront",
-        "restaurant_admin",
-        "menu_management",
-        "bookings",
-        "delivery",
-        "customer_accounts",
-        "stripe_payments",
-        "printing",
-        "custom_domains"
-      ],
-      "source": "platform"
     }
   }
 }
