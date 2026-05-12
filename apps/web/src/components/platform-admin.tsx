@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import type { Order, PrintStation } from "@rcc/contracts";
 
+import { CreateBusinessModal } from "./platform-create-business-modal";
+
 import type {
   PlatformDashboardData,
   PlatformRestaurantProvisionResult,
@@ -522,6 +524,34 @@ export function PlatformOverview({
         <RestaurantTable restaurants={dashboard.restaurants.slice(0, 6)} />
       </article>
       <CreateRestaurantForm />
+    </section>
+  );
+}
+
+export function PlatformBusinessesView({
+  restaurants,
+  status,
+  message
+}: {
+  restaurants: PlatformTenantListItem[];
+  status?: string;
+  message?: string;
+}) {
+  const activeRestaurants = restaurants.filter((r) => r.tenant.status === "active" || r.tenant.status === "trialing");
+
+  return (
+    <section className="stack-xl">
+      <FlashMessage status={status} message={message} />
+      <div className="platform-page-header">
+        <div>
+          <h2>Businesses</h2>
+          <p>{activeRestaurants.length} active businesses on the platform.</p>
+        </div>
+        <CreateBusinessModal />
+      </div>
+      <article className="panel">
+        <RestaurantTable restaurants={activeRestaurants} />
+      </article>
     </section>
   );
 }

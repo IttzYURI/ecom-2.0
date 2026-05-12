@@ -4709,6 +4709,121 @@ textarea {
   padding-left: 1.2rem;
 }
 
+/* Platform Console Shell */
+
+.platform-shell {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.7), transparent 30%),
+    linear-gradient(180deg, #f2e3d0 0%, #e8d5bc 100%);
+}
+
+.platform-main {
+  padding: 1.5rem 2rem;
+  overflow-y: auto;
+  min-height: 100vh;
+}
+
+.platform-page-content {
+  max-width: 1200px;
+}
+
+.platform-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(40, 28, 18, 0.1);
+}
+
+.platform-page-header h1,
+.platform-page-header h2 {
+  margin: 0.2rem 0 0.35rem;
+}
+
+.platform-page-header p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.platform-page-header .eyebrow {
+  margin: 0;
+}
+
+/* Create Business Modal */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(30, 20, 12, 0.55);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+}
+
+.modal-container {
+  width: 100%;
+  max-width: 900px;
+  background: rgba(255, 250, 243, 0.98);
+  border-radius: 28px;
+  border: 1px solid rgba(40, 28, 18, 0.1);
+  box-shadow: 0 32px 80px rgba(67, 44, 24, 0.22);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.5rem 1.75rem 1.25rem;
+  border-bottom: 1px solid rgba(40, 28, 18, 0.08);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.modal-header h2 {
+  margin: 0.2rem 0 0.25rem;
+}
+
+.modal-header p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.modal-close {
+  width: 2.4rem;
+  height: 2.4rem;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+
+.modal-close:hover {
+  background: rgba(200, 80, 60, 0.1);
+  color: #9d2f2f;
+}
+
+.modal-body {
+  padding: 1.25rem 1.75rem 1.75rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
 @media (max-width: 1240px) {
   .admin-stage-body,
   .admin-page-layout,
@@ -4723,7 +4838,8 @@ textarea {
 }
 
 @media (max-width: 1080px) {
-  .admin-shell {
+  .admin-shell,
+  .platform-shell {
     grid-template-columns: 1fr;
   }
 
@@ -4741,6 +4857,15 @@ textarea {
 }
 
 @media (max-width: 840px) {
+  .platform-main {
+    padding: 1rem;
+  }
+
+  .platform-page-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
   .admin-topbar,
   .admin-stage-body {
     padding-left: 1rem;

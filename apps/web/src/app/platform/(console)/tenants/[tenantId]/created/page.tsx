@@ -1,12 +1,10 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
-import { PlatformProvisionSuccessView } from "../../../../../components/platform-admin";
-import { LayoutShell } from "../../../../../components/layout-shell";
-import { getStoredTenantOwnerUser } from "../../../../../lib/extadmin-user-store";
-import { PlatformAdminService } from "../../../../../lib/platform-admin-service";
-import { getPlatformSessionFromCookieStore } from "../../../../../lib/platform-auth";
-import { getTenantFeatureFlagsRecord } from "../../../../../lib/tenant-feature-flags-store";
-import { getTenantSetupRecord } from "../../../../../lib/tenant-setup-store";
+import { PlatformProvisionSuccessView } from "../../../../../../components/platform-admin";
+import { getStoredTenantOwnerUser } from "../../../../../../lib/extadmin-user-store";
+import { PlatformAdminService } from "../../../../../../lib/platform-admin-service";
+import { getTenantFeatureFlagsRecord } from "../../../../../../lib/tenant-feature-flags-store";
+import { getTenantSetupRecord } from "../../../../../../lib/tenant-setup-store";
 
 export const dynamic = "force-dynamic";
 
@@ -21,12 +19,6 @@ export default async function PlatformTenantCreatedPage({
   params: Promise<{ tenantId: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const session = await getPlatformSessionFromCookieStore();
-
-  if (!session) {
-    redirect("/platform/login" as never);
-  }
-
   const [{ tenantId }, rawSearchParams] = await Promise.all([params, searchParams]);
   const [restaurant, setup, featureFlags, ownerUser] = await Promise.all([
     new PlatformAdminService().getRestaurant(tenantId),
@@ -57,11 +49,7 @@ export default async function PlatformTenantCreatedPage({
   const inviteUrl = inviteToken ? `${publicWebsiteUrl}/extadmin/invite/${inviteToken}` : null;
 
   return (
-    <LayoutShell
-      eyebrow="Super Admin"
-      title="Restaurant Provisioned"
-      subtitle="Workspace created. Hand off owner access and finish launch setup."
-    >
+    <div className="platform-page-content">
       <PlatformProvisionSuccessView
         restaurant={restaurant}
         setup={setup}
@@ -72,6 +60,6 @@ export default async function PlatformTenantCreatedPage({
         inviteUrl={inviteUrl}
         temporaryPassword={temporaryPassword ?? null}
       />
-    </LayoutShell>
+    </div>
   );
 }

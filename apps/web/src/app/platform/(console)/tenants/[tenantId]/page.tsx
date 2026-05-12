@@ -1,9 +1,7 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
-import { PlatformTenantDetailView } from "../../../../components/platform-admin";
-import { LayoutShell } from "../../../../components/layout-shell";
-import { PlatformAdminService } from "../../../../lib/platform-admin-service";
-import { getPlatformSessionFromCookieStore } from "../../../../lib/platform-auth";
+import { PlatformTenantDetailView } from "../../../../../components/platform-admin";
+import { PlatformAdminService } from "../../../../../lib/platform-admin-service";
 
 export const dynamic = "force-dynamic";
 
@@ -14,12 +12,6 @@ export default async function PlatformTenantDetailPage({
   params: Promise<{ tenantId: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const session = await getPlatformSessionFromCookieStore();
-
-  if (!session) {
-    redirect("/platform/login" as never);
-  }
-
   const [{ tenantId }, rawSearchParams] = await Promise.all([params, searchParams]);
   const restaurant = await new PlatformAdminService().getRestaurant(tenantId);
 
@@ -31,12 +23,8 @@ export default async function PlatformTenantDetailPage({
   const message = Array.isArray(rawSearchParams.message) ? rawSearchParams.message[0] : rawSearchParams.message;
 
   return (
-    <LayoutShell
-      eyebrow="Super Admin"
-      title={restaurant.tenant.name}
-      subtitle="Manage tenant identity, subscription state, domains, features, printing health, and safe admin launch."
-    >
+    <div className="platform-page-content">
       <PlatformTenantDetailView restaurant={restaurant} status={status} message={message} />
-    </LayoutShell>
+    </div>
   );
 }
