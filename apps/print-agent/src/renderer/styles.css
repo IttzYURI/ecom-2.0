@@ -248,6 +248,12 @@ select {
   min-width: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.admin-stage-body {
+  overflow-y: auto;
+  flex: 1;
 }
 
 .admin-topbar,
@@ -722,9 +728,117 @@ select {
   align-items: flex-start;
 }
 
+.admin-offline-toggle-area {
+  margin-top: 0.5rem;
+}
+
+.admin-offline-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 18px;
+  background: rgba(250, 244, 236, 0.8);
+}
+
+.admin-offline-toggle-label strong {
+  display: block;
+  margin-bottom: 0.2rem;
+}
+
+.admin-toggle-switch {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.25s ease;
+  flex-shrink: 0;
+}
+
+.admin-toggle-switch.is-on {
+  background: linear-gradient(145deg, #4ade80, #22c55e);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15);
+}
+
+.admin-toggle-switch.is-off {
+  background: rgba(150, 130, 115, 0.35);
+  box-shadow: 0 0 0 3px rgba(150, 130, 115, 0.08);
+}
+
+.admin-toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  transition: transform 0.25s ease;
+}
+
+.admin-toggle-switch.is-on .admin-toggle-knob {
+  transform: translateX(24px);
+}
+
 .is-disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.admin-brand-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  display: inline-block;
+  animation: status-pulse 2s infinite;
+}
+
+@keyframes status-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+.admin-dashboard-compact .admin-page-main,
+.admin-dashboard-compact .admin-metric-grid,
+.admin-dashboard-compact .admin-visual-grid {
+  gap: 0.75rem;
+}
+
+.admin-dashboard-compact .admin-surface-card,
+.admin-dashboard-compact .admin-side-card {
+  padding: 1rem;
+}
+
+.admin-dashboard-compact .admin-metric-card {
+  padding: 0.85rem;
+  border-radius: 20px;
+}
+
+.admin-dashboard-compact .admin-section-header h2 {
+  font-size: 1.15rem;
+}
+
+.admin-dashboard-compact .admin-breakdown-row {
+  padding: 0.45rem 0;
 }
 
 .admin-field-grid {
@@ -784,6 +898,210 @@ select {
 .admin-orders-card-list {
   display: none;
   margin-top: 1rem;
+}
+
+.admin-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  background: rgba(47, 33, 24, 0.45);
+  backdrop-filter: blur(6px);
+  animation: modal-fade-in 0.2s ease;
+}
+
+@keyframes modal-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.admin-modal {
+  width: min(680px, 92vw);
+  max-height: 85vh;
+  overflow-y: auto;
+  border-radius: 28px;
+  background: var(--admin-surface-strong);
+  border: 1px solid var(--admin-border);
+  box-shadow: 0 32px 64px rgba(47, 33, 24, 0.22);
+  animation: modal-slide-up 0.25s ease;
+}
+
+@keyframes modal-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.admin-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.2rem 1.5rem;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-modal-header h2 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.3rem;
+}
+
+.admin-modal-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--admin-border);
+  color: var(--admin-text);
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: background 0.15s ease;
+}
+
+.admin-modal-close:hover {
+  background: rgba(255, 255, 255, 1);
+}
+
+.admin-modal .admin-surface-card {
+  border: 0;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.admin-alert-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: grid;
+  place-items: center;
+  background: rgba(47, 33, 24, 0.6);
+  backdrop-filter: blur(8px);
+  animation: modal-fade-in 0.2s ease;
+}
+
+.admin-alert-popup {
+  width: min(440px, 90vw);
+  border-radius: 28px;
+  background: var(--admin-surface-strong);
+  border: 1px solid var(--admin-border);
+  box-shadow: 0 32px 64px rgba(47, 33, 24, 0.25);
+  overflow: hidden;
+  animation: modal-slide-up 0.25s ease;
+}
+
+.admin-alert-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 1rem;
+  background: linear-gradient(180deg, #fff7ef, #ffe8da);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--admin-accent);
+}
+
+.admin-alert-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ef4444;
+  animation: alert-pulse 1s infinite;
+}
+
+@keyframes alert-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.admin-alert-body {
+  padding: 1.25rem 1.5rem;
+}
+
+.admin-alert-title {
+  margin: 0 0 0.75rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.6rem;
+  text-align: center;
+}
+
+.admin-alert-meta {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.admin-alert-meta-row {
+  padding: 0.65rem 0.85rem;
+  border-radius: 14px;
+  background: rgba(250, 244, 236, 0.8);
+  display: grid;
+  gap: 0.15rem;
+}
+
+.admin-alert-meta-row span {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--admin-muted);
+  font-weight: 700;
+}
+
+.admin-alert-meta-row strong {
+  font-size: 0.95rem;
+}
+
+.admin-alert-items {
+  border-top: 1px solid var(--admin-border);
+  padding-top: 0.75rem;
+}
+
+.admin-alert-items ul {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-alert-items li {
+  padding: 0.4rem 0;
+  font-size: 0.9rem;
+}
+
+.admin-alert-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  padding: 0 1.5rem 1.25rem;
+}
+
+.admin-alert-btn {
+  text-align: center;
 }
 
 @media (max-width: 1080px) {

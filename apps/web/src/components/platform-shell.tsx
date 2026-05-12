@@ -5,6 +5,8 @@ import type { Route } from "next";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
+const PLATFORM_BRAND_NAME = "Superadmin";
+
 type NavItem = {
   href: Route;
   label: string;
@@ -76,7 +78,7 @@ export function PlatformShell({ children }: { children: ReactNode }) {
             </svg>
           </div>
           <div>
-            <strong>Reztro</strong>
+            <strong>{PLATFORM_BRAND_NAME}</strong>
             <span>Platform console</span>
           </div>
         </div>

@@ -1,5 +1,8 @@
 import { EventEmitter } from "node:events";
 import { randomUUID } from "node:crypto";
+import { writeFile } from "node:fs/promises";
+
+import { dialog } from "electron";
 
 import type { AgentConfig, AgentJobSummary, AgentLogEntry, AgentState } from "../shared/types";
 import { summarizeJob } from "../shared/types";
@@ -17,6 +20,8 @@ export class PrintAgentRunner extends EventEmitter {
   private pollTimer: NodeJS.Timeout | null = null;
   private heartbeatTimer: NodeJS.Timeout | null = null;
   private busy = false;
+  private previousQueueIds = new Set<string>();
+  private acknowledgedJobIds = new Set<string>();
 
   constructor(
     private readonly store: SettingsStore,
@@ -156,12 +161,6 @@ export class PrintAgentRunner extends EventEmitter {
       return;
     }
 
-    this.state = {
-      ...this.state,
-      status: this.busy ? "printing" : "connecting"
-    };
-    this.emitState();
-
     try {
       const [heartbeat, jobs] = await Promise.all([
         this.apiClient.heartbeat(this.state.lastActivity),
@@ -183,8 +182,15 @@ export class PrintAgentRunner extends EventEmitter {
       };
       this.emitState();
 
+      for (const job of queue) {
+        if (!this.previousQueueIds.has(job.id) && !this.acknowledgedJobIds.has(job.id)) {
+          this.emit("new-order", job);
+        }
+      }
+      this.previousQueueIds = new Set(queue.map((job) => job.id));
+
       if (!this.busy && config.autoPrintEnabled && config.selectedPrinter) {
-        const nextJob = queue[0];
+        const nextJob = queue.find((job) => !this.acknowledgedJobIds.has(job.id));
 
         if (nextJob) {
           void this.processJob(nextJob.id);
@@ -268,6 +274,7 @@ export class PrintAgentRunner extends EventEmitter {
         queue: this.state.queue.filter((entry) => entry.id !== job.id)
       };
       this.emitState();
+      this.emit("print-succeeded");
     } catch (error) {
       const message = this.toErrorMessage(error);
 
@@ -291,6 +298,7 @@ export class PrintAgentRunner extends EventEmitter {
         status: "error"
       };
       this.emitState();
+      this.emit("print-failed", job);
     } finally {
       this.busy = false;
       this.state = {
@@ -299,8 +307,64 @@ export class PrintAgentRunner extends EventEmitter {
         status: this.state.connectionState === "online" ? "ready" : "error"
       };
       this.emitState();
-      await this.refreshNow();
     }
+  }
+
+  async acknowledgeOrder(jobId: string) {
+    const job = this.state.queue.find((entry) => entry.id === jobId)
+      ?? this.state.history.find((entry) => entry.id === jobId);
+
+    if (!job) {
+      return;
+    }
+
+    this.acknowledgedJobIds.add(jobId);
+
+    try {
+      await this.apiClient.markFailed(job.id, { error: "Acknowledged by operator — no print attempted." });
+    } catch {
+      // Server update best-effort.
+    }
+
+    const handledJob: AgentJobSummary = {
+      ...job,
+      status: "cancelled",
+      lastError: "Acknowledged by operator"
+    };
+    await this.store.upsertHistory(handledJob);
+    await this.pushLog("info", `Order acknowledged: ${job.orderNumber}`, job);
+    this.state = {
+      ...this.state,
+      history: this.store.getPersistedState().history,
+      queue: this.state.queue.filter((entry) => entry.id !== jobId)
+    };
+    this.emitState();
+    this.emit("order-acknowledged", jobId);
+  }
+
+  async saveAsPdf(jobId: string) {
+    const job = this.state.queue.find((entry) => entry.id === jobId)
+      ?? this.state.history.find((entry) => entry.id === jobId);
+
+    if (!job) {
+      return;
+    }
+
+    const pdfBuffer = await this.printerService.saveAsPdf(job, this.state.config);
+
+    const result = await dialog.showSaveDialog({
+      title: `Save ${job.orderNumber} as PDF`,
+      defaultPath: `${job.orderNumber}.pdf`,
+      filters: [{ name: "PDF", extensions: ["pdf"] }]
+    });
+
+    if (result.canceled || !result.filePath) {
+      return;
+    }
+
+    await writeFile(result.filePath, pdfBuffer);
+    await this.acknowledgeOrder(jobId);
+    await this.pushLog("info", `Saved PDF: ${result.filePath}`, job);
   }
 
   async testPrint() {
@@ -311,6 +375,10 @@ export class PrintAgentRunner extends EventEmitter {
       await this.pushLog("error", this.toErrorMessage(error));
       throw error;
     }
+  }
+
+  clearAcknowledged(jobId: string) {
+    this.acknowledgedJobIds.delete(jobId);
   }
 
   private async setConnectionError(error: unknown, connectionState: AgentState["connectionState"]) {

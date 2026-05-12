@@ -497,6 +497,130 @@ function CreateRestaurantForm() {
   );
 }
 
+function SimplePieChart({ slices }: { slices: Array<{ label: string; value: number; color: string }> }) {
+  const total = slices.reduce((sum, s) => sum + s.value, 0);
+  if (total === 0) {
+    return <div className="chart-empty">No data</div>;
+  }
+
+  let cumulative = 0;
+  const paths = slices.map((slice) => {
+    const fraction = slice.value / total;
+    const startAngle = cumulative * 360 - 90;
+    cumulative += fraction;
+    const endAngle = cumulative * 360 - 90;
+
+    const startRad = (startAngle * Math.PI) / 180;
+    const endRad = (endAngle * Math.PI) / 180;
+    const largeArc = fraction > 0.5 ? 1 : 0;
+    const cx = 80;
+    const cy = 80;
+    const r = 65;
+
+    const x1 = cx + r * Math.cos(startRad);
+    const y1 = cy + r * Math.sin(startRad);
+    const x2 = cx + r * Math.cos(endRad);
+    const y2 = cy + r * Math.sin(endRad);
+
+    if (slice.value === 0) {
+      return null;
+    }
+
+    return (
+      <path
+        key={slice.label}
+        d={`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`}
+        fill={slice.color}
+      />
+    );
+  });
+
+  return (
+    <svg viewBox="0 0 160 160" className="chart-svg">
+      {paths}
+      <circle cx={80} cy={80} r={40} fill="rgba(255,250,243,0.95)" />
+      <text x={80} y={76} textAnchor="middle" className="chart-center-value">{total}</text>
+      <text x={80} y={92} textAnchor="middle" className="chart-center-label">total</text>
+    </svg>
+  );
+}
+
+function SimpleBarChart({ bars }: { bars: Array<{ label: string; value: number; color: string }> }) {
+  const max = Math.max(...bars.map((b) => b.value), 1);
+
+  return (
+    <div className="bar-chart">
+      {bars.map((bar) => (
+        <div key={bar.label} className="bar-chart-row">
+          <span className="bar-chart-label">{bar.label}</span>
+          <div className="bar-chart-track">
+            <div
+              className="bar-chart-fill"
+              style={{
+                width: `${(bar.value / max) * 100}%`,
+                background: bar.color
+              }}
+            />
+          </div>
+          <span className="bar-chart-value">{bar.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DonutChart({ slices, centerLabel }: { slices: Array<{ label: string; value: number; color: string }>; centerLabel: string }) {
+  const total = slices.reduce((sum, s) => sum + s.value, 0);
+  if (total === 0) {
+    return <div className="chart-empty">No data</div>;
+  }
+
+  let cumulative = 0;
+  const paths = slices.map((slice) => {
+    const fraction = slice.value / total;
+    const startAngle = cumulative * 360 - 90;
+    cumulative += fraction;
+    const endAngle = cumulative * 360 - 90;
+
+    const startRad = (startAngle * Math.PI) / 180;
+    const endRad = (endAngle * Math.PI) / 180;
+    const largeArc = fraction > 0.5 ? 1 : 0;
+    const outerR = 65;
+    const innerR = 45;
+    const cx = 80;
+    const cy = 80;
+
+    const ox1 = cx + outerR * Math.cos(startRad);
+    const oy1 = cy + outerR * Math.sin(startRad);
+    const ox2 = cx + outerR * Math.cos(endRad);
+    const oy2 = cy + outerR * Math.sin(endRad);
+    const ix1 = cx + innerR * Math.cos(endRad);
+    const iy1 = cy + innerR * Math.sin(endRad);
+    const ix2 = cx + innerR * Math.cos(startRad);
+    const iy2 = cy + innerR * Math.sin(startRad);
+
+    if (slice.value === 0) {
+      return null;
+    }
+
+    return (
+      <path
+        key={slice.label}
+        d={`M ${ox1} ${oy1} A ${outerR} ${outerR} 0 ${largeArc} 1 ${ox2} ${oy2} L ${ix1} ${iy1} A ${innerR} ${innerR} 0 ${largeArc} 0 ${ix2} ${iy2} Z`}
+        fill={slice.color}
+      />
+    );
+  });
+
+  return (
+    <svg viewBox="0 0 160 160" className="chart-svg">
+      {paths}
+      <text x={80} y={76} textAnchor="middle" className="chart-center-value">{total}</text>
+      <text x={80} y={92} textAnchor="middle" className="chart-center-label">{centerLabel}</text>
+    </svg>
+  );
+}
+
 export function PlatformOverview({
   dashboard,
   status,
@@ -506,24 +630,169 @@ export function PlatformOverview({
   status?: string;
   message?: string;
 }) {
+  const { restaurants } = dashboard;
+
+  const activeCount = restaurants.filter((r) => r.tenant.status === "active").length;
+  const trialingCount = restaurants.filter((r) => r.tenant.status === "trialing").length;
+  const suspendedCount = restaurants.filter((r) => r.tenant.status === "suspended").length;
+  const archivedCount = restaurants.filter((r) => r.tenant.status === "archived").length;
+
+  const totalOrders = restaurants.reduce((sum, r) => sum + r.orderSummary.totalOrders, 0);
+  const activeOrders = restaurants.reduce((sum, r) => sum + r.orderSummary.activeOrders, 0);
+  const paidOrders = restaurants.reduce((sum, r) => sum + r.orderSummary.paidOrders, 0);
+  const grossRevenue = restaurants.reduce((sum, r) => sum + r.orderSummary.grossRevenue, 0);
+
+  const onlinePrinters = restaurants.filter((r) => r.printerSummary.status === "online").length;
+  const degradedPrinters = restaurants.filter((r) => r.printerSummary.status === "degraded").length;
+  const offlinePrinters = restaurants.filter((r) => r.printerSummary.status === "offline").length;
+  const noPrinters = restaurants.filter((r) => r.printerSummary.status === "not_configured").length;
+
+  const businessesOpen = activeCount;
+  const businessesClosed = suspendedCount + archivedCount + trialingCount;
+
   return (
     <section className="stack-xl">
       <FlashMessage status={status} message={message} />
-      <MetricCards dashboard={dashboard} />
+
+      <div className="dashboard-metric-grid">
+        <article className="panel dashboard-metric-card">
+          <div className="dashboard-metric-icon" style={{ background: "rgba(47,106,80,0.12)", color: "#2f6a50" }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+              <path d="M3 21h18" /><path d="M5 21V7l7-4 7 4v14" /><path d="M9 21v-4h6v4" />
+            </svg>
+          </div>
+          <div>
+            <p className="eyebrow">Total Businesses</p>
+            <h2>{restaurants.length}</h2>
+          </div>
+        </article>
+        <article className="panel dashboard-metric-card">
+          <div className="dashboard-metric-icon" style={{ background: "rgba(212,91,33,0.12)", color: "#d45b21" }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+              <path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z" /><path d="M14 2v5h5" /><path d="M9 12h6" /><path d="M9 16h6" />
+            </svg>
+          </div>
+          <div>
+            <p className="eyebrow">Total Orders</p>
+            <h2>{totalOrders}</h2>
+            <span className="dashboard-metric-sub">{activeOrders} active &middot; {paidOrders} paid</span>
+          </div>
+        </article>
+        <article className="panel dashboard-metric-card">
+          <div className="dashboard-metric-icon" style={{ background: "rgba(47,106,80,0.12)", color: "#2f6a50" }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+              <circle cx="12" cy="12" r="10" /><path d="M12 6v6l4 2" />
+            </svg>
+          </div>
+          <div>
+            <p className="eyebrow">Businesses Open</p>
+            <h2 className="dashboard-metric-positive">{businessesOpen}</h2>
+            <span className="dashboard-metric-sub">{businessesClosed} inactive</span>
+          </div>
+        </article>
+        <article className="panel dashboard-metric-card">
+          <div className="dashboard-metric-icon" style={{ background: "rgba(180,140,60,0.12)", color: "#b48c3c" }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+              <path d="M18 20V10" /><path d="M12 20V4" /><path d="M6 20v-6" />
+            </svg>
+          </div>
+          <div>
+            <p className="eyebrow">Gross Revenue</p>
+            <h2>{formatMoney(grossRevenue)}</h2>
+          </div>
+        </article>
+      </div>
+
+      <div className="dashboard-charts-grid">
+        <article className="panel dashboard-chart-card">
+          <div className="dashboard-chart-header">
+            <h3>Tenant Status</h3>
+          </div>
+          <div className="dashboard-chart-body">
+            <SimplePieChart
+              slices={[
+                { label: "Active", value: activeCount, color: "#3b9e6f" },
+                { label: "Trialing", value: trialingCount, color: "#e8a84c" },
+                { label: "Suspended", value: suspendedCount, color: "#c95d3a" },
+                { label: "Archived", value: archivedCount, color: "#9e9490" }
+              ]}
+            />
+            <div className="chart-legend">
+              <div className="chart-legend-item"><span style={{ background: "#3b9e6f" }} />Active <strong>{activeCount}</strong></div>
+              <div className="chart-legend-item"><span style={{ background: "#e8a84c" }} />Trialing <strong>{trialingCount}</strong></div>
+              <div className="chart-legend-item"><span style={{ background: "#c95d3a" }} />Suspended <strong>{suspendedCount}</strong></div>
+              <div className="chart-legend-item"><span style={{ background: "#9e9490" }} />Archived <strong>{archivedCount}</strong></div>
+            </div>
+          </div>
+        </article>
+
+        <article className="panel dashboard-chart-card">
+          <div className="dashboard-chart-header">
+            <h3>Orders by Tenant</h3>
+          </div>
+          <div className="dashboard-chart-body">
+            <SimpleBarChart
+              bars={restaurants.slice(0, 8).map((r, i) => ({
+                label: r.tenant.name.length > 16 ? r.tenant.name.slice(0, 14) + "..." : r.tenant.name,
+                value: r.orderSummary.totalOrders,
+                color: ["#3b9e6f", "#d45b21", "#4a8fd4", "#e8a84c", "#9e6fbf", "#5fbfb0", "#c95d3a", "#7a9e3b"][i % 8]
+              }))}
+            />
+          </div>
+        </article>
+
+        <article className="panel dashboard-chart-card">
+          <div className="dashboard-chart-header">
+            <h3>Printer Health</h3>
+          </div>
+          <div className="dashboard-chart-body">
+            <DonutChart
+              centerLabel="printers"
+              slices={[
+                { label: "Online", value: onlinePrinters, color: "#3b9e6f" },
+                { label: "Degraded", value: degradedPrinters, color: "#e8a84c" },
+                { label: "Offline", value: offlinePrinters, color: "#c95d3a" },
+                { label: "Not configured", value: noPrinters, color: "#9e9490" }
+              ]}
+            />
+            <div className="chart-legend">
+              <div className="chart-legend-item"><span style={{ background: "#3b9e6f" }} />Online <strong>{onlinePrinters}</strong></div>
+              <div className="chart-legend-item"><span style={{ background: "#e8a84c" }} />Degraded <strong>{degradedPrinters}</strong></div>
+              <div className="chart-legend-item"><span style={{ background: "#c95d3a" }} />Offline <strong>{offlinePrinters}</strong></div>
+              <div className="chart-legend-item"><span style={{ background: "#9e9490" }} />Not configured <strong>{noPrinters}</strong></div>
+            </div>
+          </div>
+        </article>
+
+        <article className="panel dashboard-chart-card">
+          <div className="dashboard-chart-header">
+            <h3>Revenue by Tenant</h3>
+          </div>
+          <div className="dashboard-chart-body">
+            <SimpleBarChart
+              bars={restaurants.slice(0, 8).map((r, i) => ({
+                label: r.tenant.name.length > 16 ? r.tenant.name.slice(0, 14) + "..." : r.tenant.name,
+                value: Math.round(r.orderSummary.grossRevenue * 100) / 100,
+                color: ["#3b9e6f", "#d45b21", "#4a8fd4", "#e8a84c", "#9e6fbf", "#5fbfb0", "#c95d3a", "#7a9e3b"][i % 8]
+              }))}
+            />
+          </div>
+        </article>
+      </div>
+
       <article className="panel">
         <div className="section-heading">
           <div>
-            <p className="eyebrow">Restaurants</p>
-            <h2>Client portfolio</h2>
-            <p>View health, subscription state, and operational readiness across every tenant.</p>
+            <p className="eyebrow">Portfolio</p>
+            <h2>All Businesses</h2>
+            <p>Health, subscription state, and operational readiness across every tenant.</p>
           </div>
           <Link href="/platform/tenants" className="text-link">
-            View full directory
+            Manage businesses
           </Link>
         </div>
-        <RestaurantTable restaurants={dashboard.restaurants.slice(0, 6)} />
+        <RestaurantTable restaurants={dashboard.restaurants} />
       </article>
-      <CreateRestaurantForm />
     </section>
   );
 }

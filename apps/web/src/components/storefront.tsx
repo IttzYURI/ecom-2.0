@@ -8,6 +8,8 @@ import { CustomerAuthForm } from "./customer-auth-form";
 import { formatMoney } from "../lib/currency";
 import { MenuCategoryNav } from "./menu-category-nav";
 import { PublicBookingForm, PublicContactForm } from "./public-interactions";
+import { ScrollReveal, StaggerReveal, ParallaxImage, CountUp, HeroEntrance, FloatingElement } from "./scroll-reveal";
+import { HeroSlider } from "./hero-slider";
 
 const fallbackGalleryImages = [
   "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=900&q=80",
@@ -92,181 +94,200 @@ export function StorefrontHome({ bundle }: { bundle: TenantBundle }) {
   return (
     <div className="home-stack stack-xl">
       <section className="hero-editorial storefront-hero">
-        <div className="hero-editorial-copy">
-          <div className="storefront-hero-headline">
-            <div className="hero-status">
-              <span className="hero-status-dot" aria-hidden="true" />
-              <span>Open now</span>
+        <HeroEntrance>
+          <div className="hero-editorial-copy">
+            <div className="storefront-hero-headline">
+              <div className="hero-status">
+                <span className="hero-status-dot" aria-hidden="true" />
+                <span>Open now</span>
+              </div>
+              <p className="eyebrow">Contemporary {bundle.tenant.cuisine} dining</p>
+              <h1>
+                Savor every
+                <br />
+                moment with
+                <br />
+                <span>every bite</span>
+              </h1>
             </div>
-            <p className="eyebrow">Contemporary {bundle.tenant.cuisine} dining</p>
-            <h1>
-              Savor every
-              <br />
-              moment with
-              <br />
-              <span>every bite</span>
-            </h1>
-          </div>
-          <div className="storefront-hero-support">
-            <p className="hero-lead">
-              {bundle.tenant.name} brings together warm hospitality, elegant plating, and direct
-              online ordering for guests who want the restaurant experience before the
-              first bite arrives.
-            </p>
-            <div className="actions">
-              <Link href="/booking" className="button-ghost">
-                Reserve your table
-              </Link>
-              <Link href="/menu" className="button-primary">
-                Order Now
-              </Link>
+            <div className="storefront-hero-support">
+              <p className="hero-lead">
+                {bundle.tenant.name} brings together warm hospitality, elegant plating, and direct
+                online ordering for guests who want the restaurant experience before the
+                first bite arrives.
+              </p>
+              <div className="actions">
+                <Link href="/booking" className="button-ghost">
+                  Reserve your table
+                </Link>
+                <Link href="/menu" className="button-primary">
+                  Order Now
+                </Link>
+              </div>
+            </div>
+            <div className="hero-feature-list">
+              <article>
+                <strong>Special events</strong>
+                <span>Private dining and curated group experiences.</span>
+              </article>
+              <article>
+                <strong>Chef&apos;s experience</strong>
+                <span>Signature dishes built for memorable evenings.</span>
+              </article>
+              <article>
+                <strong>Direct ordering</strong>
+                <span>Best offers and collection timing available here.</span>
+              </article>
             </div>
           </div>
-          <div className="hero-feature-list">
-            <article>
-              <strong>Special events</strong>
-              <span>Private dining and curated group experiences.</span>
-            </article>
-            <article>
-              <strong>Chef&apos;s experience</strong>
-              <span>Signature dishes built for memorable evenings.</span>
-            </article>
-            <article>
-              <strong>Direct ordering</strong>
-              <span>Best offers and collection timing available here.</span>
-            </article>
-          </div>
-        </div>
+        </HeroEntrance>
         <div className="hero-editorial-visual">
           <div className="hero-plate-wrap">
-            <ResponsiveImage
-              src={bundle.tenant.branding.heroImage}
+            <HeroSlider
+              images={[
+                bundle.tenant.branding.heroImage,
+                ...galleryImages.slice(0, 4)
+              ]}
               alt={bundle.tenant.name}
-              className="hero-plate"
-              sizes="(max-width: 768px) 100vw, 50vw"
             />
           </div>
-          <div className="floating-callout">
-            <p className="eyebrow">Signature pick</p>
-            <h3>{signature?.name ?? "House special"}</h3>
-            <p>{signature?.description ?? bundle.content.about}</p>
-          </div>
+          <FloatingElement delay={0.5}>
+            <div className="floating-callout">
+              <p className="eyebrow">Signature pick</p>
+              <h3>{signature?.name ?? "House special"}</h3>
+              <p>{signature?.description ?? bundle.content.about}</p>
+            </div>
+          </FloatingElement>
         </div>
       </section>
 
-      <section className="stat-band stat-band-premium storefront-stat-band">
-        <article>
-          <strong>30-45 min</strong>
-          <span>Delivery estimate</span>
-        </article>
-        <article>
-          <strong>7 days</strong>
-          <span>Open every week</span>
-        </article>
-        <article>
-          <strong>Direct site</strong>
-          <span>Best offers live here</span>
-        </article>
-        <article>
-          <strong>4.9/5</strong>
-          <span>Rated by regular guests</span>
-        </article>
-      </section>
-
-      <section>
-        <article className="panel tone-warm story-intro storefront-story-intro">
-          <p className="eyebrow">Culinary artistry</p>
-          <h2>Indulgent plates with a quieter sense of luxury</h2>
-          <p>
-            {bundle.content.about} Every section of the menu is built to feel refined,
-            generous, and worth returning to.
-          </p>
-        </article>
-      </section>
-
-      <section className="trio-showcase storefront-showcase">
-        {featured.map((item) => (
-          <article key={item.id} className="showcase-dish">
-            <div className="showcase-dish-media">
-              <span className="showcase-dish-badge">
-                {item.bestSeller ? "Best seller" : "Chef pick"}
-              </span>
-              <ResponsiveImage src={item.image} alt={item.name} sizes="(max-width: 768px) 100vw, 33vw" />
-            </div>
-            <div className="showcase-dish-copy">
-              <h3>{item.name}</h3>
-              <p>{item.description}</p>
-              <strong>{formatMoney(item.basePrice)}</strong>
-            </div>
+      <ScrollReveal>
+        <section className="stat-band stat-band-premium storefront-stat-band">
+          <article>
+            <strong>30-45 min</strong>
+            <span>Delivery estimate</span>
           </article>
-        ))}
-      </section>
+          <article>
+            <strong>7 days</strong>
+            <span>Open every week</span>
+          </article>
+          <article>
+            <strong>Direct site</strong>
+            <span>Best offers live here</span>
+          </article>
+          <article>
+            <strong>4.9/5</strong>
+            <span>Rated by regular guests</span>
+          </article>
+        </section>
+      </ScrollReveal>
 
-      <section className="panel feature-panel storefront-feature-panel">
-        <div className="section-heading feature-heading">
-          <div>
-            <p className="eyebrow">Featured dishes</p>
-            <h2>Customer favorites worth ordering first</h2>
-          </div>
-          <Link href="/menu" className="text-link">
-            View full menu
-          </Link>
-        </div>
-        <div className="card-grid">
+      <ScrollReveal>
+        <section>
+          <article className="panel tone-warm story-intro storefront-story-intro">
+            <p className="eyebrow">Culinary artistry</p>
+            <h2>Indulgent plates with a quieter sense of luxury</h2>
+            <p>
+              {bundle.content.about} Every section of the menu is built to feel refined,
+              generous, and worth returning to.
+            </p>
+          </article>
+        </section>
+      </ScrollReveal>
+
+      <StaggerReveal>
+        <section className="trio-showcase storefront-showcase">
           {featured.map((item) => (
-            <MenuHighlight key={item.id} item={item} />
-          ))}
-        </div>
-      </section>
-
-      <section className="chef-section chef-section-premium storefront-chef-section">
-        <article className="panel tone-dark chef-story">
-          <p className="eyebrow">Crafted by experts</p>
-          <h2>A kitchen team focused on consistency, elegance, and flavor</h2>
-          <p>
-            From weekday delivery orders to weekend dinner reservations, every service
-            is treated like a reflection of the restaurant itself.
-          </p>
-        </article>
-        <div className="chef-cards">
-          {["Marco Bellini", "Elena Rossi", "Takeshi Mori"].map((name, index) => (
-            <article key={name} className="panel chef-card">
-              <ResponsiveImage src={galleryImages[index]} alt={name} sizes="(max-width: 768px) 100vw, 33vw" />
-              <h3>{name}</h3>
-              <p>{index === 0 ? "Head Chef" : index === 1 ? "Pastry Chef" : "Sous Chef"}</p>
+            <article key={item.id} className="showcase-dish stagger-child">
+              <div className="showcase-dish-media">
+                <span className="showcase-dish-badge">
+                  {item.bestSeller ? "Best seller" : "Chef pick"}
+                </span>
+                <ResponsiveImage src={item.image} alt={item.name} sizes="(max-width: 768px) 100vw, 33vw" />
+              </div>
+              <div className="showcase-dish-copy">
+                <h3>{item.name}</h3>
+                <p>{item.description}</p>
+                <strong>{formatMoney(item.basePrice)}</strong>
+              </div>
             </article>
           ))}
-        </div>
-      </section>
+        </section>
+      </StaggerReveal>
 
-      <section className="testimonial-reservation-grid storefront-social-proof">
-        <article className="panel testimonial-column">
-          <p className="eyebrow">Praise from our patrons</p>
-          <h2>Guests remember the mood as much as the meal</h2>
-          <div className="testimonial-cards">
-            {bundle.reviews.concat(bundle.reviews.slice(0, 2)).map((review, index) => (
-              <article key={`${review.id}-${index}`} className="testimonial-card">
-                <strong>{review.author}</strong>
-                <span>{review.content}</span>
-              </article>
-            ))}
-          </div>
-        </article>
-        <article className="panel reservation-banner">
-          <ResponsiveImage
-            src={galleryImages[1]}
-            alt="Restaurant table service"
-            sizes="(max-width: 768px) 100vw, 50vw"
-          />
-          <div className="reservation-banner-card">
-            <p className="eyebrow">Reserve your table</p>
-            <h3>Book an evening built around the full {bundle.tenant.name} experience</h3>
-            <Link href="/booking" className="button-primary block-button">
-              Book now
+      <ScrollReveal>
+        <section className="panel feature-panel storefront-feature-panel">
+          <div className="section-heading feature-heading">
+            <div>
+              <p className="eyebrow">Featured dishes</p>
+              <h2>Customer favorites worth ordering first</h2>
+            </div>
+            <Link href="/menu" className="text-link">
+              View full menu
             </Link>
           </div>
-        </article>
-      </section>
+          <StaggerReveal className="card-grid">
+            {featured.map((item) => (
+              <div key={item.id} className="stagger-child">
+                <MenuHighlight item={item} />
+              </div>
+            ))}
+          </StaggerReveal>
+        </section>
+      </ScrollReveal>
+
+      <ScrollReveal>
+        <section className="chef-section chef-section-premium storefront-chef-section">
+          <article className="panel tone-dark chef-story">
+            <p className="eyebrow">Crafted by experts</p>
+            <h2>A kitchen team focused on consistency, elegance, and flavor</h2>
+            <p>
+              From weekday delivery orders to weekend dinner reservations, every service
+              is treated like a reflection of the restaurant itself.
+            </p>
+          </article>
+          <StaggerReveal className="chef-cards">
+            {["Marco Bellini", "Elena Rossi", "Takeshi Mori"].map((name, index) => (
+              <article key={name} className="panel chef-card stagger-child">
+                <ResponsiveImage src={galleryImages[index]} alt={name} sizes="(max-width: 768px) 100vw, 33vw" />
+                <h3>{name}</h3>
+                <p>{index === 0 ? "Head Chef" : index === 1 ? "Pastry Chef" : "Sous Chef"}</p>
+              </article>
+            ))}
+          </StaggerReveal>
+        </section>
+      </ScrollReveal>
+
+      <ScrollReveal>
+        <section className="testimonial-reservation-grid storefront-social-proof">
+          <article className="panel testimonial-column">
+            <p className="eyebrow">Praise from our patrons</p>
+            <h2>Guests remember the mood as much as the meal</h2>
+            <div className="testimonial-cards">
+              {bundle.reviews.concat(bundle.reviews.slice(0, 2)).map((review, index) => (
+                <article key={`${review.id}-${index}`} className="testimonial-card">
+                  <strong>{review.author}</strong>
+                  <span>{review.content}</span>
+                </article>
+              ))}
+            </div>
+          </article>
+          <article className="panel reservation-banner">
+            <ResponsiveImage
+              src={galleryImages[1]}
+              alt="Restaurant table service"
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+            <div className="reservation-banner-card">
+              <p className="eyebrow">Reserve your table</p>
+              <h3>Book an evening built around the full {bundle.tenant.name} experience</h3>
+              <Link href="/booking" className="button-primary block-button">
+                Book now
+              </Link>
+            </div>
+          </article>
+        </section>
+      </ScrollReveal>
     </div>
   );
 }

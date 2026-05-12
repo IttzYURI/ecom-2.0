@@ -1,4 +1,5 @@
 import type { AgentJobSummary, AgentState } from "../shared/types";
+import { startAlertSound, stopAlertSound } from "./alert-sound";
 
 declare global {
   interface Window {
@@ -11,6 +12,11 @@ declare global {
       testPrint(): Promise<void>;
       printJob(jobId: string): Promise<void>;
       subscribeState(listener: (state: AgentState) => void): () => void;
+      onNewOrder(listener: (job: AgentJobSummary) => void): () => void;
+      onPrintSucceeded(listener: () => void): () => void;
+      onPrintFailed(listener: (job: AgentJobSummary) => void): () => void;
+      acknowledgeOrder(jobId: string): Promise<void>;
+      saveAsPdf(jobId: string): Promise<void>;
     };
   }
 }
@@ -35,12 +41,31 @@ if (!appRoot) {
 
 const root = appRoot;
 let latestState: AgentState | null = null;
+let lastRenderKey = "";
+
+function getRenderKey(state: AgentState): string {
+  return JSON.stringify({
+    v: uiState.view,
+    ads: uiState.activeDashboardSection,
+    oid: uiState.selectedOrderId,
+    aj: uiState.alertJob?.id,
+    s: state.status,
+    cs: state.connectionState,
+    q: state.queue.map((j) => `${j.id}:${j.status}`).join(","),
+    h: state.history.length,
+    li: state.logs.slice(0, 2).map((l) => l.id).join(","),
+    le: state.lastError,
+    ap: state.config.autoPrintEnabled,
+    pr: state.config.selectedPrinter
+  });
+}
 
 const uiState: {
   view: AppView;
   activeDashboardSection: DashboardSection;
   pendingScrollTarget: DashboardSection | null;
   selectedOrderId?: string;
+  alertJob?: AgentJobSummary;
   filters: {
     search: string;
     status: OrderFilterStatus;
@@ -390,6 +415,56 @@ function renderLog(log: AgentState["logs"][number]) {
   `;
 }
 
+function renderOrderAlertPopup(job: AgentJobSummary) {
+  const items = job.items
+    .map((item) => `<li><strong>${item.quantity} x ${escapeHtml(item.name)}</strong></li>`)
+    .join("");
+
+  return `
+    <div class="admin-alert-overlay">
+      <div class="admin-alert-popup">
+        <div class="admin-alert-indicator">
+          <span class="admin-alert-dot" aria-hidden="true"></span>
+          <span>New order received</span>
+        </div>
+        <div class="admin-alert-body">
+          <h2 class="admin-alert-title">${escapeHtml(job.orderNumber)}</h2>
+          <div class="admin-alert-meta">
+            <div class="admin-alert-meta-row">
+              <span>Customer</span>
+              <strong>${escapeHtml(job.customerName)}</strong>
+            </div>
+            <div class="admin-alert-meta-row">
+              <span>Type</span>
+              <strong>${escapeHtml(toLabel(job.fulfillmentType))}</strong>
+            </div>
+            <div class="admin-alert-meta-row">
+              <span>Total</span>
+              <strong>${formatMoney(job.total)}</strong>
+            </div>
+            <div class="admin-alert-meta-row">
+              <span>Time</span>
+              <strong>${formatDate(job.createdAt)}</strong>
+            </div>
+          </div>
+          <div class="admin-alert-items">
+            <p class="eyebrow">Items</p>
+            <ul>${items}</ul>
+          </div>
+        </div>
+        <div class="admin-alert-actions">
+          <button type="button" class="button-primary admin-alert-btn" data-action="acknowledge-alert" data-job-id="${job.id}">
+            Receive Order
+          </button>
+          <button type="button" class="button-ghost admin-alert-btn" data-action="save-pdf-alert" data-job-id="${job.id}">
+            Save as PDF
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 function renderOrderStats(orders: OrderRecord[]) {
   const acceptedLast7 = orders.filter((order) => order.normalizedStatus === "accepted" && isWithinLastDays(order.createdAt, 7)).length;
   const acceptedLifetime = orders.filter((order) => order.normalizedStatus === "accepted").length;
@@ -457,44 +532,29 @@ function renderOrderDetails(order: OrderRecord) {
 
 function renderOrdersTableRows(orders: OrderRecord[]) {
   return orders
-    .map((order) => {
-      const expanded = uiState.selectedOrderId === order.orderId;
-
-      return `
-        <tr>
-          <td data-label="Order ID"><strong>${escapeHtml(order.orderNumber)}</strong><span class="admin-table-subcopy">${escapeHtml(order.orderId)}</span></td>
-          <td data-label="Customer">${escapeHtml(order.customerName)}</td>
-          <td data-label="Contact">${escapeHtml(order.customerPhone || "No phone")}<span class="admin-table-subcopy">Email unavailable</span></td>
-          <td data-label="Status"><span class="admin-badge ${getOrderBadgeClass(order.normalizedStatus)}">${escapeHtml(toLabel(order.normalizedStatus))}</span></td>
-          <td data-label="Type">${escapeHtml(toLabel(order.fulfillmentType))}</td>
-          <td data-label="Total">${formatMoney(order.total)}</td>
-          <td data-label="Date">${formatDate(order.printedAt || order.createdAt)}</td>
-          <td data-label="Actions">
-            <div class="admin-inline-actions">
-              <button type="button" class="button-ghost compact-button" data-action="toggle-order-details" data-order-id="${order.orderId}">
-                ${expanded ? "Hide details" : "View details"}
-              </button>
-              ${
-                order.printJobId
-                  ? `<button type="button" class="button-ghost compact-button" data-action="reprint-order" data-job-id="${order.printJobId}">Reprint</button>`
-                  : `<button type="button" class="button-ghost compact-button is-disabled" disabled>Reprint unavailable</button>`
-              }
-            </div>
-          </td>
-        </tr>
-        ${
-          expanded
-            ? `
-              <tr class="admin-expanded-row">
-                <td colspan="8">
-                  ${renderOrderDetails(order)}
-                </td>
-              </tr>
-            `
-            : ""
-        }
-      `;
-    })
+    .map((order) => `
+      <tr>
+        <td data-label="Order ID"><strong>${escapeHtml(order.orderNumber)}</strong><span class="admin-table-subcopy">${escapeHtml(order.orderId)}</span></td>
+        <td data-label="Customer">${escapeHtml(order.customerName)}</td>
+        <td data-label="Contact">${escapeHtml(order.customerPhone || "No phone")}<span class="admin-table-subcopy">Email unavailable</span></td>
+        <td data-label="Status"><span class="admin-badge ${getOrderBadgeClass(order.normalizedStatus)}">${escapeHtml(toLabel(order.normalizedStatus))}</span></td>
+        <td data-label="Type">${escapeHtml(toLabel(order.fulfillmentType))}</td>
+        <td data-label="Total">${formatMoney(order.total)}</td>
+        <td data-label="Date">${formatDate(order.printedAt || order.createdAt)}</td>
+        <td data-label="Actions">
+          <div class="admin-inline-actions">
+            <button type="button" class="button-ghost compact-button" data-action="toggle-order-details" data-order-id="${order.orderId}">
+              View details
+            </button>
+            ${
+              order.printJobId
+                ? `<button type="button" class="button-ghost compact-button" data-action="reprint-order" data-job-id="${order.printJobId}">Reprint</button>`
+                : `<button type="button" class="button-ghost compact-button is-disabled" disabled>Reprint unavailable</button>`
+            }
+          </div>
+        </td>
+      </tr>
+    `)
     .join("");
 }
 
@@ -513,14 +573,11 @@ function renderOrdersCards(orders: OrderRecord[]) {
           </div>
           <div class="admin-breakdown-list compact">
             ${renderBreakdownRow("Customer", order.customerName)}
-            ${renderBreakdownRow("Phone", order.customerPhone || "No phone")}
-            ${renderBreakdownRow("Contact", "Email unavailable")}
             ${renderBreakdownRow("Total", formatMoney(order.total))}
-            ${renderBreakdownRow("Order ID", order.orderId)}
           </div>
           <div class="admin-inline-actions">
             <button type="button" class="button-ghost compact-button" data-action="toggle-order-details" data-order-id="${order.orderId}">
-              ${uiState.selectedOrderId === order.orderId ? "Hide details" : "View details"}
+              View details
             </button>
             ${
               order.printJobId
@@ -528,7 +585,6 @@ function renderOrdersCards(orders: OrderRecord[]) {
                 : `<button type="button" class="button-ghost compact-button is-disabled" disabled>Reprint unavailable</button>`
             }
           </div>
-          ${uiState.selectedOrderId === order.orderId ? renderOrderDetails(order) : ""}
         </article>
       `
     )
@@ -538,7 +594,6 @@ function renderOrdersCards(orders: OrderRecord[]) {
 function renderOrdersView(state: AgentState, allOrders: OrderRecord[]) {
   const visibleOrders = filterOrders(allOrders);
   const statsOrders = hasActiveFilters() ? visibleOrders : allOrders;
-  const selectedOrder = allOrders.find((order) => order.orderId === uiState.selectedOrderId);
 
   return `
     <section class="admin-orders-page">
@@ -597,14 +652,6 @@ function renderOrdersView(state: AgentState, allOrders: OrderRecord[]) {
           </div>
         </form>
       </section>
-
-      ${
-        state.status === "connecting" || state.status === "printing"
-          ? `<section class="admin-loading-strip"><span class="admin-loading-dot"></span><strong>Refreshing live order data...</strong><span>Latest queue and history are being synced.</span></section>`
-          : ""
-      }
-
-      ${selectedOrder ? renderOrderDetails(selectedOrder) : ""}
 
       <section class="admin-surface-card admin-table-card">
         <div class="admin-section-header">
@@ -870,21 +917,18 @@ function renderPreviousView(state: AgentState) {
 
 function renderDashboardView(state: AgentState) {
   const currentJob = state.queue.find((job) => job.id === state.currentJobId) ?? state.queue[0] ?? null;
-  const recentFailure = state.history.find((job) => job.status === "failed") ?? null;
   const printedCount = state.history.filter((job) => job.status === "printed").length;
   const failedCount = state.history.filter((job) => job.status === "failed").length;
-  const stationSummary = state.stationId ? `${state.config.stationName} linked` : "Station not paired";
   const printerSummary = state.config.selectedPrinter || "No printer selected";
-  const queueSummary =
-    state.queue.length > 0 ? `${state.queue.length} jobs waiting` : state.connectionState === "online" ? "Queue clear" : "Waiting for connection";
+  const isOffline = !state.config.autoPrintEnabled;
 
   return `
-    <section class="admin-page-layout">
+    <section class="admin-page-layout admin-dashboard-compact">
       <main class="admin-page-main">
         <section class="admin-metric-grid">
-          ${renderMetricCard("Connection", toLabel(state.connectionState), stationSummary, getMetricTone(state.connectionState))}
-          ${renderMetricCard("Queue", String(state.queue.length), queueSummary, state.queue.length ? "gold" : "orange")}
-          ${renderMetricCard("Printed", String(printedCount), `${failedCount} failed recorded`, printedCount ? "orange" : "gold")}
+          ${renderMetricCard("Connection", toLabel(state.connectionState), printerSummary, getMetricTone(state.connectionState))}
+          ${renderMetricCard("Queue", String(state.queue.length), state.queue.length ? `${state.queue.length} waiting` : "Clear", state.queue.length ? "gold" : "orange")}
+          ${renderMetricCard("Printed", String(printedCount), `${failedCount} failed`, printedCount ? "orange" : "gold")}
         </section>
 
         <section class="admin-visual-grid">
@@ -893,33 +937,38 @@ function renderDashboardView(state: AgentState) {
               <div>
                 <p class="eyebrow">Live service</p>
                 <h2>Station overview</h2>
-                <p>Clean summary of pairing, printer routing, and the ticket currently in focus.</p>
               </div>
-              <div class="admin-section-actions">
-                <span class="admin-badge ${getBadgeClass(state.status)}">${escapeHtml(toLabel(state.status))}</span>
-              </div>
+              <span class="admin-badge ${getBadgeClass(state.status)}">${escapeHtml(toLabel(state.status))}</span>
             </div>
-            <div class="admin-breakdown-list">
+            <div class="admin-breakdown-list compact">
               ${renderBreakdownRow("Station", state.config.stationName || "Kitchen Station")}
               ${renderBreakdownRow("Printer", printerSummary)}
-              ${renderBreakdownRow("Current focus", currentJob ? `${currentJob.orderNumber} | ${currentJob.customerName}` : "No active ticket")}
-              ${renderBreakdownRow("Last heartbeat", formatDate(state.lastHeartbeatAt))}
+              ${renderBreakdownRow("Focus", currentJob ? `${currentJob.orderNumber} — ${currentJob.customerName}` : "No active ticket")}
             </div>
           </article>
 
           <article class="admin-surface-card">
             <div class="admin-section-header">
               <div>
-                <p class="eyebrow">Service health</p>
-                <h2>Queue posture</h2>
-                <p>Live job state only, without the historical and desktop configuration sections.</p>
+                <p class="eyebrow">Service mode</p>
+                <h2>Online / Offline</h2>
               </div>
             </div>
-            <div class="admin-breakdown-list">
-              ${renderBreakdownRow("Queue summary", queueSummary)}
-              ${renderBreakdownRow("Last failure", recentFailure?.orderNumber ?? "None")}
-              ${renderBreakdownRow("Auto print", state.config.autoPrintEnabled ? "Enabled" : "Disabled")}
-              ${renderBreakdownRow("Printer target", printerSummary)}
+            <div class="admin-offline-toggle-area">
+              <div class="admin-offline-toggle-row">
+                <div class="admin-offline-toggle-label">
+                  <strong>${isOffline ? "Agent is offline" : "Agent is online"}</strong>
+                  <span>${isOffline ? "Not receiving new jobs" : "Listening for print jobs"}</span>
+                </div>
+                <button
+                  type="button"
+                  class="admin-toggle-switch ${isOffline ? "is-off" : "is-on"}"
+                  data-action="${isOffline ? "go-online" : "go-offline"}"
+                  aria-label="${isOffline ? "Switch online" : "Switch offline"}"
+                >
+                  <span class="admin-toggle-knob" />
+                </button>
+              </div>
             </div>
           </article>
         </section>
@@ -928,18 +977,28 @@ function renderDashboardView(state: AgentState) {
           <div class="admin-section-header">
             <div>
               <p class="eyebrow">Queue</p>
-              <h2>Incoming kitchen tickets</h2>
-              <p>Newest printable jobs stay visible with customer, item, and retry context.</p>
+              <h2>Incoming ticket</h2>
             </div>
-            <div class="admin-section-actions">
-              <span class="admin-badge ${state.queue.length ? "warning" : "success"}">${state.queue.length ? `${state.queue.length} queued` : "Queue clear"}</span>
-            </div>
+            <span class="admin-badge ${state.queue.length ? "warning" : "success"}">${state.queue.length ? `${state.queue.length} queued` : "Queue clear"}</span>
           </div>
           <div class="admin-panel-grid">
             ${
               state.queue.length
-                ? state.queue.map((job) => renderQueueJob(job)).join("")
-                : `<div class="admin-empty-card">No queued jobs. New eligible orders will appear here automatically.</div>`
+                ? state.queue.slice(0, 1).map((job) => `
+                    <article class="admin-job-card">
+                      <div class="admin-card-topline">
+                        <div>
+                          <h3>${escapeHtml(job.orderNumber)}</h3>
+                          <p>${escapeHtml(job.customerName)} | ${formatMoney(job.total)} | ${escapeHtml(toLabel(job.fulfillmentType))}</p>
+                        </div>
+                        <span class="admin-badge ${getBadgeClass(job.status)}">${escapeHtml(toLabel(job.status))}</span>
+                      </div>
+                      <div class="admin-card-actions">
+                        <button class="button-ghost compact-button" data-action="print-job" data-job-id="${job.id}">Print / Retry</button>
+                      </div>
+                    </article>
+                  `).join("")
+                : `<div class="admin-empty-card">No queued jobs right now.</div>`
             }
           </div>
         </section>
@@ -951,29 +1010,30 @@ function renderDashboardView(state: AgentState) {
             <div>
               <p class="eyebrow">Activity</p>
               <h2>Operator feed</h2>
-              <p>Local logs, heartbeat state, and recent failures stay visible in one rail.</p>
             </div>
           </div>
 
           ${
             state.lastError
               ? `<div class="admin-inline-alert danger"><strong>Attention needed</strong><span>${escapeHtml(state.lastError)}</span></div>`
-              : `<div class="admin-inline-alert success"><strong>Station healthy</strong><span>No active local error message recorded.</span></div>`
+              : `<div class="admin-inline-alert success"><strong>Station healthy</strong><span>No active errors.</span></div>`
           }
-
-          <div class="admin-breakdown-list compact">
-            ${renderBreakdownRow("Last heartbeat", formatDate(state.lastHeartbeatAt))}
-            ${renderBreakdownRow("Current printer", printerSummary)}
-            ${renderBreakdownRow("Last activity", state.lastActivity || "Idle")}
-          </div>
 
           <div class="admin-timeline">
             ${
               state.logs.length
-                ? state.logs.map((log) => renderLog(log)).join("")
-                : `<div class="admin-empty-card">No local log entries yet.</div>`
+                ? state.logs.slice(0, 2).map((log) => renderLog(log)).join("")
+                : `<div class="admin-empty-card">No log entries yet.</div>`
             }
           </div>
+
+          ${state.logs.length > 2 ? `
+            <div class="admin-card-actions" style="margin-top: 0.75rem;">
+              <button type="button" class="button-ghost compact-button" data-action="show-all-logs">
+                Explore more (${state.logs.length} total)
+              </button>
+            </div>
+          ` : ""}
         </section>
       </aside>
     </section>
@@ -982,6 +1042,13 @@ function renderDashboardView(state: AgentState) {
 
 function render(state: AgentState) {
   latestState = state;
+
+  const key = getRenderKey(state);
+  if (key === lastRenderKey) {
+    return;
+  }
+  lastRenderKey = key;
+
   const allOrders = deriveOrders(state);
   const activeSection = uiState.activeDashboardSection;
 
@@ -1005,7 +1072,10 @@ function render(state: AgentState) {
         <div class="admin-sidebar-brand">
           <div class="admin-brand-mark">PA</div>
           <div>
-            <strong>RCC Print Agent</strong>
+            <div class="admin-brand-title-row">
+              <strong>RCC Print Agent</strong>
+              <span class="admin-status-dot" aria-hidden="true"></span>
+            </div>
             <span>Kitchen station workspace</span>
           </div>
         </div>
@@ -1086,6 +1156,24 @@ function render(state: AgentState) {
         </div>
       </div>
     </main>
+
+    ${
+      uiState.selectedOrderId && allOrders.find((o) => o.orderId === uiState.selectedOrderId)
+        ? `
+          <div class="admin-modal-overlay" data-action="close-order-modal">
+            <div class="admin-modal">
+              <div class="admin-modal-header">
+                <h2>Order details</h2>
+                <button type="button" class="admin-modal-close" data-action="close-order-modal" aria-label="Close">&#10005;</button>
+              </div>
+              ${renderOrderDetails(allOrders.find((o) => o.orderId === uiState.selectedOrderId)!)}
+            </div>
+          </div>
+        `
+        : ""
+    }
+
+    ${uiState.alertJob ? renderOrderAlertPopup(uiState.alertJob) : ""}
   `;
 
   if (uiState.view === "dashboard" && uiState.pendingScrollTarget) {
@@ -1135,6 +1223,34 @@ async function initialize() {
 
   window.printAgent.subscribeState((nextState) => {
     render(nextState);
+  });
+
+  window.printAgent.onNewOrder((job) => {
+    startAlertSound();
+    uiState.alertJob = job;
+
+    if (latestState) {
+      render(latestState);
+    }
+  });
+
+  window.printAgent.onPrintSucceeded(() => {
+    stopAlertSound();
+    uiState.alertJob = undefined;
+
+    if (latestState) {
+      render(latestState);
+    }
+  });
+
+  window.printAgent.onPrintFailed((job) => {
+    if (!uiState.alertJob) {
+      uiState.alertJob = job;
+    }
+
+    if (latestState) {
+      render(latestState);
+    }
   });
 
   document.addEventListener("submit", async (event) => {
@@ -1249,12 +1365,46 @@ async function initialize() {
     }
 
     if (action === "toggle-order-details" && actionElement.dataset.orderId) {
-      uiState.selectedOrderId = uiState.selectedOrderId === actionElement.dataset.orderId ? undefined : actionElement.dataset.orderId;
+      uiState.selectedOrderId = actionElement.dataset.orderId;
 
       if (latestState) {
         render(latestState);
       }
 
+      return;
+    }
+
+    if (action === "go-online") {
+      await window.printAgent.updateConfig({ autoPrintEnabled: true });
+      await window.printAgent.refreshNow();
+      return;
+    }
+
+    if (action === "go-offline") {
+      await window.printAgent.updateConfig({ autoPrintEnabled: false });
+      if (latestState) {
+        render(latestState);
+      }
+      return;
+    }
+
+    if (action === "show-all-logs") {
+      uiState.view = "dashboard";
+      uiState.activeDashboardSection = "activity";
+      uiState.pendingScrollTarget = "activity";
+
+      if (latestState) {
+        render(latestState);
+      }
+      return;
+    }
+
+    if (action === "close-order-modal") {
+      uiState.selectedOrderId = undefined;
+
+      if (latestState) {
+        render(latestState);
+      }
       return;
     }
 
@@ -1264,6 +1414,32 @@ async function initialize() {
       if (latestState) {
         render(latestState);
       }
+    }
+
+    if (action === "acknowledge-alert" && actionElement.dataset.jobId) {
+      const jobId = actionElement.dataset.jobId;
+      uiState.alertJob = undefined;
+      stopAlertSound();
+
+      if (latestState) {
+        render(latestState);
+      }
+
+      await window.printAgent.acknowledgeOrder(jobId);
+      return;
+    }
+
+    if (action === "save-pdf-alert" && actionElement.dataset.jobId) {
+      const jobId = actionElement.dataset.jobId;
+      uiState.alertJob = undefined;
+      stopAlertSound();
+
+      if (latestState) {
+        render(latestState);
+      }
+
+      await window.printAgent.saveAsPdf(jobId);
+      return;
     }
   });
 }

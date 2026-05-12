@@ -35,6 +35,33 @@ export class PrinterService {
     await this.printJob(ticket, config);
   }
 
+  async saveAsPdf(job: AgentJobSummary, config: Pick<AgentConfig, "paperWidth" | "stationName">): Promise<Buffer> {
+    const html = renderTicketHtml(job, config);
+    const printWindow = new BrowserWindow({
+      show: false,
+      width: 420,
+      height: 640,
+      webPreferences: {
+        sandbox: false
+      }
+    });
+
+    try {
+      await printWindow.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+      const pdfData = await printWindow.webContents.printToPDF({
+        pageSize: config.paperWidth === "58mm"
+          ? { width: 58000, height: 120000 }
+          : { width: 80000, height: 120000 },
+        printBackground: true
+      });
+      return Buffer.from(pdfData);
+    } finally {
+      if (!printWindow.isDestroyed()) {
+        printWindow.close();
+      }
+    }
+  }
+
   private async printHtml(html: string, printerName: string) {
     const printWindow = new BrowserWindow({
       show: false,

@@ -1,23 +1,14 @@
-import { PlatformBusinessesView } from "../../../../components/platform-admin";
+import { BusinessesPageClient } from "../../../../components/platform-businesses-client";
 import { PlatformAdminService } from "../../../../lib/platform-admin-service";
 
 export const dynamic = "force-dynamic";
 
-export default async function PlatformTenantsPage({
-  searchParams
-}: {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
-}) {
-  const [restaurants, rawSearchParams] = await Promise.all([
-    new PlatformAdminService().listRestaurants(),
-    searchParams
-  ]);
-  const status = Array.isArray(rawSearchParams.status) ? rawSearchParams.status[0] : rawSearchParams.status;
-  const message = Array.isArray(rawSearchParams.message) ? rawSearchParams.message[0] : rawSearchParams.message;
+export default async function PlatformTenantsPage() {
+  const restaurants = await new PlatformAdminService().listRestaurants();
 
   return (
     <div className="platform-page-content">
-      <PlatformBusinessesView restaurants={restaurants} status={status} message={message} />
+      <BusinessesPageClient restaurants={restaurants} />
     </div>
   );
 }

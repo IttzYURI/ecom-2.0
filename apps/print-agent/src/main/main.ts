@@ -2,6 +2,7 @@ import path from "node:path";
 
 import { app, BrowserWindow, ipcMain, Menu, nativeImage, Tray } from "electron";
 
+import type { AgentJobSummary } from "../shared/types";
 import { PrintServerClient } from "./api-client";
 import { PrintAgentRunner } from "./job-runner";
 import { PrinterService } from "./printer-service";
@@ -120,6 +121,12 @@ function broadcastState(state: unknown) {
   }
 }
 
+function sendToRenderer(channel: string, ...args: unknown[]) {
+  for (const window of BrowserWindow.getAllWindows()) {
+    window.webContents.send(channel, ...args);
+  }
+}
+
 async function bootstrap() {
   const settingsStore = new SettingsStore(app.getPath("userData"));
   const apiClient = new PrintServerClient(() => settingsStore.getConfig());
@@ -138,6 +145,20 @@ async function bootstrap() {
     broadcastState(state);
   });
 
+  runner.on("new-order", (job: AgentJobSummary) => {
+    showWindow();
+    sendToRenderer("print-agent:new-order", job);
+  });
+
+  runner.on("print-succeeded", () => {
+    sendToRenderer("print-agent:print-succeeded");
+  });
+
+  runner.on("print-failed", (job: AgentJobSummary) => {
+    showWindow();
+    sendToRenderer("print-agent:print-failed", job);
+  });
+
   createTray();
   createWindow();
   runner.start();
@@ -149,6 +170,8 @@ async function bootstrap() {
   ipcMain.handle("print-agent:refresh-now", async () => runner!.refreshNow());
   ipcMain.handle("print-agent:test-print", async () => runner!.testPrint());
   ipcMain.handle("print-agent:print-job", async (_event, jobId: string) => runner!.processJob(jobId));
+  ipcMain.handle("print-agent:acknowledge-order", async (_event, jobId: string) => runner!.acknowledgeOrder(jobId));
+  ipcMain.handle("print-agent:save-as-pdf", async (_event, jobId: string) => runner!.saveAsPdf(jobId));
 
   app.on("before-quit", () => {
     runner?.stop();
